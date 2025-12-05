@@ -391,12 +391,18 @@ export class BackendNode {
             };
             raft.submitOperation(operation);
         } else {
-            // Forward to leader (simplified: apply locally for now)
-            room.applyOperation({
-                type: RoomMessageType.ROOM_JOIN,
-                payload: { roomCode, userId: client.userId },
-                timestamp: Date.now()
-            });
+            // Forward to leader
+            const leaderId = raft?.getLeaderId();
+            if (leaderId) {
+                const operation: RoomOperation = {
+                    type: RoomMessageType.ROOM_JOIN,
+                    payload: { roomCode, userId: client.userId },
+                    timestamp: Date.now()
+                };
+                this.forwardToLeader(leaderId, operation).catch((error) => {
+                    logger.error(`[Node ${this.nodeId}] Failed to forward join to leader:`, error);
+                });
+            }
         }
 
         this.sendToClient(clientId, {
@@ -482,14 +488,38 @@ export class BackendNode {
             timestamp: Date.now()
         };
 
-        // Submit through Raft if leader, otherwise apply locally
+        // Submit through Raft if leader, otherwise forward to leader
         if (raft?.isLeader()) {
             raft.submitOperation(operation);
         } else {
-            // In production, we'd forward to leader
-            // For simplicity, apply locally
-            room.applyOperation(operation);
+            // Forward to leader
+            const leaderId = raft?.getLeaderId();
+            if (leaderId) {
+                this.forwardToLeader(leaderId, operation).catch((error) => {
+                    logger.error(`[Node ${this.nodeId}] Failed to forward to leader:`, error);
+                    this.sendToClient(clientId, {
+                        type: "ERROR",
+                        payload: { message: "Failed to process operation - leader unavailable" }
+                    });
+                });
+            } else {
+                // No leader elected yet
+                this.sendToClient(clientId, {
+                    type: "ERROR",
+                    payload: { message: "No leader available - please try again" }
+                });
+            }
         }
+    }
+
+    /**
+     * Forward an operation to the leader node
+     */
+    private async forwardToLeader(leaderId: string, operation: RoomOperation): Promise<void> {
+        await this.rpcClient.sendRpc(leaderId, {
+            type: operation.type,
+            payload: operation.payload
+        });
     }
 
     /**
