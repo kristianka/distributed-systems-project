@@ -434,7 +434,13 @@ export class BackendNode {
         if (raft?.isLeader()) {
             raft.submitOperation(operation);
         } else {
-            room.applyOperation(operation);
+            // Forward to leader
+            const leaderId = raft?.getLeaderId();
+            if (leaderId) {
+                this.forwardToLeader(leaderId, operation).catch((error) => {
+                    logger.error(`[Node ${this.nodeId}] Failed to forward leave to leader:`, error);
+                });
+            }
         }
 
         client.roomCode = null;
