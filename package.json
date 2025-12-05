@@ -1,0 +1,20 @@
+{
+  "name": "distributed-systems-project",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "node-a": "bun run src/index.ts node-a",
+    "node-b": "bun run src/index.ts node-b",
+    "node-c": "bun run src/index.ts node-c",
+    "start-all": "concurrently \"bun run node-a\" \"bun run node-b\" \"bun run node-c\"",
+    "test-client": "bun run src/test-client.ts"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "concurrently": "^8.2.2"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  }
+}
