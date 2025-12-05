@@ -30,25 +30,21 @@ export const DEFAULT_CLUSTER_CONFIG: ClusterConfig = {
 /**
  * Get the configuration for a specific node
  */
-export function getNodeConfig(nodeId: string): NodeConfig | undefined {
+export const getNodeConfig = (nodeId: string) => {
     return DEFAULT_CLUSTER_CONFIG.nodes.find((n) => n.nodeId === nodeId);
-}
+};
 
 /**
  * Get the peer configurations for a specific node
  */
-export function getPeerConfigs(nodeId: string): NodeConfig[] {
+export const getPeerConfigs = (nodeId: string) => {
     return DEFAULT_CLUSTER_CONFIG.nodes.filter((n) => n.nodeId !== nodeId);
-}
+};
 
 /**
  * Parse node configuration from environment variables or command line
  */
-export function parseNodeConfigFromEnv(): {
-    nodeId: string;
-    config: NodeConfig;
-    peers: NodeConfig[];
-} {
+export const parseNodeConfigFromEnv = () => {
     const nodeId = process.env.NODE_ID ?? Bun.argv[2] ?? "node-a";
 
     const config = getNodeConfig(nodeId);
@@ -59,4 +55,4 @@ export function parseNodeConfigFromEnv(): {
     const peers = getPeerConfigs(nodeId);
 
     return { nodeId, config, peers };
-}
+};

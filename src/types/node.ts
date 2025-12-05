@@ -39,7 +39,7 @@ export interface RaftRoomState {
 }
 
 // Create initial Raft state for a room
-export function createRaftRoomState(): RaftRoomState {
+export const createRaftRoomState = () => {
     return {
         currentTerm: 0,
         votedFor: null,
@@ -51,4 +51,4 @@ export function createRaftRoomState(): RaftRoomState {
         role: NodeRole.FOLLOWER,
         leaderId: null
     };
-}
+};

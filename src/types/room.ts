@@ -41,7 +41,7 @@ export interface RoomState {
 }
 
 // Create initial room state
-export function createRoomState(roomCode: string, creatorId: string): RoomState {
+export const createRoomState = (roomCode: string, creatorId: string) => {
     return {
         roomCode,
         createdAt: Date.now(),
@@ -62,4 +62,4 @@ export function createRoomState(roomCode: string, creatorId: string): RoomState 
         ],
         chatLog: []
     };
-}
+};
