@@ -1,4 +1,5 @@
 import type { NodeConfig, RpcMessage, RaftMessageType, RoomMessageType } from "../types";
+import { logger } from "../utils";
 
 /**
  * RPC Client for inter-node communication over HTTP.
@@ -18,7 +19,7 @@ export class RpcClient {
      */
     registerPeer(config: NodeConfig): void {
         this.peerNodes.set(config.nodeId, config);
-        console.log(
+        logger.log(
             `[RPC ${this.nodeId}] Registered peer ${config.nodeId} at ${config.host}:${config.rpcPort}`
         );
     }
@@ -60,7 +61,7 @@ export class RpcClient {
 
             return await response.json();
         } catch (error) {
-            console.error(`[RPC ${this.nodeId}] Failed to send RPC to ${targetNodeId}:`, error);
+            logger.error(`[RPC ${this.nodeId}] Failed to send RPC to ${targetNodeId}:`, error);
             throw error;
         }
     }
@@ -123,7 +124,7 @@ export class RpcServer {
                             headers: { "Content-Type": "application/json" }
                         });
                     } catch (error) {
-                        console.error(`[RPC Server ${this.nodeId}] Error:`, error);
+                        logger.error(`[RPC Server ${this.nodeId}] Error:`, error);
                         return new Response(JSON.stringify({ error: "Internal server error" }), {
                             status: 500,
                             headers: { "Content-Type": "application/json" }
@@ -141,7 +142,7 @@ export class RpcServer {
             }
         });
 
-        console.log(`[RPC Server ${this.nodeId}] Started on port ${this.port}`);
+        logger.log(`[RPC Server ${this.nodeId}] Started on port ${this.port}`);
     }
 
     /**
@@ -151,7 +152,7 @@ export class RpcServer {
         if (this.server) {
             this.server.stop();
             this.server = null;
-            console.log(`[RPC Server ${this.nodeId}] Stopped`);
+            logger.log(`[RPC Server ${this.nodeId}] Stopped`);
         }
     }
 }

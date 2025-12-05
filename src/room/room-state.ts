@@ -14,6 +14,7 @@ import {
     type PlaylistRemovePayload,
     type ChatMessagePayload
 } from "../types";
+import { logger } from "../utils";
 
 /**
  * Manages the state of a single room.
@@ -77,7 +78,7 @@ export class RoomStateManager {
                 break;
 
             default:
-                console.warn(`Unknown operation type: ${operation.type}`);
+                logger.warn(`Unknown operation type: ${operation.type}`);
         }
 
         this.onStateChange(this.getState());
@@ -94,7 +95,7 @@ export class RoomStateManager {
             isCreator: false
         });
 
-        console.log(`[Room ${this.state.roomCode}] User ${payload.userId} joined`);
+        logger.log(`[Room ${this.state.roomCode}] User ${payload.userId} joined`);
     }
 
     private applyRoomLeave(payload: RoomLeavePayload): void {
@@ -102,7 +103,7 @@ export class RoomStateManager {
             (p) => p.userId !== payload.userId
         );
 
-        console.log(`[Room ${this.state.roomCode}] User ${payload.userId} left`);
+        logger.log(`[Room ${this.state.roomCode}] User ${payload.userId} left`);
     }
 
     private applyPlaybackPlay(payload: PlaybackPlayPayload): void {
@@ -113,7 +114,7 @@ export class RoomStateManager {
             lastUpdated: Date.now()
         };
 
-        console.log(
+        logger.log(
             `[Room ${this.state.roomCode}] Playing video ${payload.videoId} at ${payload.positionSeconds}s`
         );
     }
@@ -126,7 +127,7 @@ export class RoomStateManager {
             lastUpdated: Date.now()
         };
 
-        console.log(`[Room ${this.state.roomCode}] Paused at ${payload.positionSeconds}s`);
+        logger.log(`[Room ${this.state.roomCode}] Paused at ${payload.positionSeconds}s`);
     }
 
     private applyPlaybackSeek(payload: PlaybackSeekPayload): void {
@@ -136,7 +137,7 @@ export class RoomStateManager {
             lastUpdated: Date.now()
         };
 
-        console.log(`[Room ${this.state.roomCode}] Seeked to ${payload.newPositionSeconds}s`);
+        logger.log(`[Room ${this.state.roomCode}] Seeked to ${payload.newPositionSeconds}s`);
     }
 
     private applyPlaylistAdd(payload: PlaylistAddPayload): void {
@@ -153,7 +154,7 @@ export class RoomStateManager {
             this.state.playlist.splice(payload.newVideoPosition, 0, video);
         }
 
-        console.log(
+        logger.log(
             `[Room ${this.state.roomCode}] Added video ${payload.videoId} at position ${payload.newVideoPosition}`
         );
     }
@@ -161,7 +162,7 @@ export class RoomStateManager {
     private applyPlaylistRemove(payload: PlaylistRemovePayload): void {
         this.state.playlist = this.state.playlist.filter((v) => v.videoId !== payload.videoId);
 
-        console.log(`[Room ${this.state.roomCode}] Removed video ${payload.videoId}`);
+        logger.log(`[Room ${this.state.roomCode}] Removed video ${payload.videoId}`);
     }
 
     private applyChatMessage(payload: ChatMessagePayload): void {
@@ -179,7 +180,7 @@ export class RoomStateManager {
             this.state.chatLog = this.state.chatLog.slice(-1000);
         }
 
-        console.log(
+        logger.log(
             `[Room ${this.state.roomCode}] Chat from ${payload.userId}: ${payload.messageText}`
         );
     }

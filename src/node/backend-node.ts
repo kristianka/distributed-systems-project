@@ -12,6 +12,7 @@ import {
 import { RaftConsensus } from "../consensus";
 import { RoomStateManager, generateRoomCode } from "../room";
 import { RpcClient, RpcServer } from "../rpc";
+import { logger } from "../utils";
 
 interface ClientConnection {
     id: string;
@@ -68,7 +69,7 @@ export class BackendNode {
      * Start the backend node
      */
     start(): void {
-        console.log(`[Node ${this.nodeId}] Starting...`);
+        logger.log(`[Node ${this.nodeId}] Starting...`);
 
         // Start RPC server for inter-node communication
         this.rpcServer.start();
@@ -76,16 +77,16 @@ export class BackendNode {
         // Start WebSocket server for client connections
         this.startWebSocketServer();
 
-        console.log(`[Node ${this.nodeId}] Ready`);
-        console.log(`  - Client WebSocket: ws://localhost:${this.config.port}`);
-        console.log(`  - RPC Server: http://localhost:${this.config.rpcPort}`);
+        logger.log(`[Node ${this.nodeId}] Ready`);
+        logger.log(`  - Client WebSocket: ws://localhost:${this.config.port}`);
+        logger.log(`  - RPC Server: http://localhost:${this.config.rpcPort}`);
     }
 
     /**
      * Stop the backend node
      */
     stop(): void {
-        console.log(`[Node ${this.nodeId}] Stopping...`);
+        logger.log(`[Node ${this.nodeId}] Stopping...`);
 
         // Stop all Raft instances
         for (const raft of this.roomRaft.values()) {
@@ -98,7 +99,7 @@ export class BackendNode {
             this.wsServer.stop();
         }
 
-        console.log(`[Node ${this.nodeId}] Stopped`);
+        logger.log(`[Node ${this.nodeId}] Stopped`);
     }
 
     /**
@@ -140,7 +141,7 @@ export class BackendNode {
             websocket: {
                 open: (ws) => {
                     const clientId = (ws.data as { clientId: string }).clientId;
-                    console.log(`[Node ${this.nodeId}] Client connected: ${clientId}`);
+                    logger.log(`[Node ${this.nodeId}] Client connected: ${clientId}`);
 
                     this.clients.set(clientId, {
                         id: clientId,
@@ -163,7 +164,7 @@ export class BackendNode {
                 },
                 close: (ws) => {
                     const clientId = (ws.data as { clientId: string }).clientId;
-                    console.log(`[Node ${this.nodeId}] Client disconnected: ${clientId}`);
+                    logger.log(`[Node ${this.nodeId}] Client disconnected: ${clientId}`);
 
                     const client = this.clients.get(clientId);
                     if (client?.roomCode) {
@@ -174,14 +175,14 @@ export class BackendNode {
             }
         });
 
-        console.log(`[Node ${this.nodeId}] WebSocket server started on port ${this.config.port}`);
+        logger.log(`[Node ${this.nodeId}] WebSocket server started on port ${this.config.port}`);
     }
 
     /**
      * Handle incoming RPC message from another node
      */
     private async handleRpcMessage(message: RpcMessage): Promise<unknown> {
-        console.log(
+        logger.log(
             `[Node ${this.nodeId}] Received RPC: ${message.type} from ${message.sourceNodeId}`
         );
 
@@ -231,7 +232,7 @@ export class BackendNode {
                 payload: Record<string, unknown>;
             };
 
-            console.log(`[Node ${this.nodeId}] Client ${clientId} message: ${message.type}`);
+            logger.log(`[Node ${this.nodeId}] Client ${clientId} message: ${message.type}`);
 
             switch (message.type) {
                 case "SET_USER_ID":
@@ -260,10 +261,10 @@ export class BackendNode {
                     break;
 
                 default:
-                    console.warn(`Unknown client message type: ${message.type}`);
+                    logger.warn(`Unknown client message type: ${message.type}`);
             }
         } catch (error) {
-            console.error(`[Node ${this.nodeId}] Error handling client message:`, error);
+            logger.error(`[Node ${this.nodeId}] Error handling client message:`, error);
         }
     }
 
@@ -311,7 +312,7 @@ export class BackendNode {
             payload: { roomCode, state: this.rooms.get(roomCode)?.getState() }
         });
 
-        console.log(`[Node ${this.nodeId}] Room ${roomCode} created by ${client.userId}`);
+        logger.log(`[Node ${this.nodeId}] Room ${roomCode} created by ${client.userId}`);
     }
 
     /**
@@ -319,7 +320,7 @@ export class BackendNode {
      */
     private createRoom(roomCode: string, creatorId: string): void {
         if (this.rooms.has(roomCode)) {
-            console.log(`[Node ${this.nodeId}] Room ${roomCode} already exists`);
+            logger.log(`[Node ${this.nodeId}] Room ${roomCode} already exists`);
             return;
         }
 
@@ -341,7 +342,7 @@ export class BackendNode {
                 roomState.applyOperation(operation);
             },
             onLeaderChange: (leaderId) => {
-                console.log(`[Node ${this.nodeId}] Room ${roomCode} leader changed to ${leaderId}`);
+                logger.log(`[Node ${this.nodeId}] Room ${roomCode} leader changed to ${leaderId}`);
                 this.broadcastToRoom(roomCode, {
                     type: "LEADER_CHANGED",
                     payload: { roomCode, leaderId }
@@ -353,7 +354,7 @@ export class BackendNode {
         // Start Raft consensus
         raft.start();
 
-        console.log(`[Node ${this.nodeId}] Room ${roomCode} initialized`);
+        logger.log(`[Node ${this.nodeId}] Room ${roomCode} initialized`);
     }
 
     /**
@@ -403,7 +404,7 @@ export class BackendNode {
             payload: { roomCode, state: room.getState() }
         });
 
-        console.log(`[Node ${this.nodeId}] User ${client.userId} joined room ${roomCode}`);
+        logger.log(`[Node ${this.nodeId}] User ${client.userId} joined room ${roomCode}`);
     }
 
     /**
@@ -518,7 +519,7 @@ export class BackendNode {
     private broadcastToNodes(message: { type: RoomMessageType; payload: unknown }): void {
         for (const peerId of this.rpcClient.getPeerNodeIds()) {
             this.rpcClient.sendRpc(peerId, message).catch((error) => {
-                console.error(`[Node ${this.nodeId}] Failed to broadcast to ${peerId}:`, error);
+                logger.error(`[Node ${this.nodeId}] Failed to broadcast to ${peerId}:`, error);
             });
         }
     }
@@ -532,7 +533,7 @@ export class BackendNode {
             try {
                 client.ws.send(JSON.stringify(message));
             } catch (error) {
-                console.error(`[Node ${this.nodeId}] Failed to send to client ${clientId}:`, error);
+                logger.error(`[Node ${this.nodeId}] Failed to send to client ${clientId}:`, error);
             }
         }
     }

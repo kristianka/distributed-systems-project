@@ -1,5 +1,6 @@
 import { BackendNode } from "./node";
 import { parseNodeConfigFromEnv } from "./config";
+import { logger } from "./utils";
 
 /**
  * Main entry point for starting a backend node.
@@ -13,17 +14,17 @@ import { parseNodeConfigFromEnv } from "./config";
  *   NODE_ID=node-a bun run src/index.ts
  */
 
-console.log("===========================================");
-console.log("  Distributed YouTube Watch-Together System");
-console.log("===========================================\n");
+logger.log("===========================================");
+logger.log("  Distributed YouTube Watch-Together System");
+logger.log("===========================================");
 
 // Parse configuration
 const { nodeId, config, peers } = parseNodeConfigFromEnv();
 
-console.log(`Starting node: ${nodeId}`);
-console.log(`Configuration:`, config);
-console.log(`Peers:`, peers.map((p) => p.nodeId).join(", "));
-console.log("");
+logger.log(`Starting node: ${nodeId}`);
+logger.log(`Configuration:`, config);
+logger.log(`Peers:`, peers.map((p) => p.nodeId).join(", "));
+logger.log("");
 
 // Create and start the backend node
 const node = new BackendNode(config, peers);
@@ -31,15 +32,15 @@ node.start();
 
 // Handle graceful shutdown
 process.on("SIGINT", () => {
-    console.log("\nShutting down...");
+    logger.log("\nShutting down...");
     node.stop();
     process.exit(0);
 });
 
 process.on("SIGTERM", () => {
-    console.log("\nShutting down...");
+    logger.log("\nShutting down...");
     node.stop();
     process.exit(0);
 });
 
-console.log("\nPress Ctrl+C to stop the node.\n");
+logger.log("\nPress Ctrl+C to stop the node.\n");

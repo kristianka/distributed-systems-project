@@ -3,13 +3,15 @@
  * Connects to a node and performs basic operations.
  */
 
+import { logger } from "./utils";
+
 const NODE_URL = process.env.NODE_URL ?? "ws://localhost:3001/ws";
 
-console.log("===========================================");
-console.log("  Test Client for Watch-Together System");
-console.log("===========================================\n");
+logger.log("===========================================");
+logger.log("  Test Client for Watch-Together System");
+logger.log("===========================================");
 
-console.log(`Connecting to: ${NODE_URL}\n`);
+logger.log(`Connecting to: ${NODE_URL}`);
 
 const ws = new WebSocket(NODE_URL);
 
@@ -17,10 +19,10 @@ const userId = `user-${Math.random().toString(36).substring(7)}`;
 let roomCode: string | null = null;
 
 ws.onopen = () => {
-    console.log("✓ Connected to server\n");
+    logger.log("✓ Connected to server");
 
     // Set user ID
-    console.log(`Setting user ID: ${userId}`);
+    logger.log(`Setting user ID: ${userId}`);
     ws.send(
         JSON.stringify({
             type: "SET_USER_ID",
@@ -31,15 +33,14 @@ ws.onopen = () => {
 
 ws.onmessage = (event) => {
     const message = JSON.parse(event.data);
-    console.log(`← Received: ${message.type}`);
-    console.log(`  Payload:`, JSON.stringify(message.payload, null, 2).split("\n").join("\n  "));
-    console.log("");
+    logger.log(`← Received: ${message.type}`);
+    logger.log(`  Payload:`, JSON.stringify(message.payload, null, 2).split("\n").join("\n  "));
 
     // Handle specific messages
     switch (message.type) {
         case "USER_ID_SET":
             // Create a room after setting user ID
-            console.log("Creating a new room...");
+            logger.log("Creating a new room...");
             ws.send(
                 JSON.stringify({
                     type: "CREATE_ROOM",
@@ -50,11 +51,11 @@ ws.onmessage = (event) => {
 
         case "ROOM_CREATED":
             roomCode = message.payload.roomCode;
-            console.log(`✓ Room created with code: ${roomCode}\n`);
+            logger.log(`✓ Room created with code: ${roomCode}`);
 
             // Test some operations
             setTimeout(() => {
-                console.log("Adding a video to playlist...");
+                logger.log("Adding a video to playlist...");
                 ws.send(
                     JSON.stringify({
                         type: "PLAYLIST_ADD",
@@ -64,7 +65,7 @@ ws.onmessage = (event) => {
             }, 1000);
 
             setTimeout(() => {
-                console.log("Starting playback...");
+                logger.log("Starting playback...");
                 ws.send(
                     JSON.stringify({
                         type: "PLAYBACK_PLAY",
@@ -74,7 +75,7 @@ ws.onmessage = (event) => {
             }, 2000);
 
             setTimeout(() => {
-                console.log("Sending a chat message...");
+                logger.log("Sending a chat message...");
                 ws.send(
                     JSON.stringify({
                         type: "CHAT_MESSAGE",
@@ -84,7 +85,7 @@ ws.onmessage = (event) => {
             }, 3000);
 
             setTimeout(() => {
-                console.log("Seeking to position 30s...");
+                logger.log("Seeking to position 30s...");
                 ws.send(
                     JSON.stringify({
                         type: "PLAYBACK_SEEK",
@@ -94,7 +95,7 @@ ws.onmessage = (event) => {
             }, 4000);
 
             setTimeout(() => {
-                console.log("Pausing playback...");
+                logger.log("Pausing playback...");
                 ws.send(
                     JSON.stringify({
                         type: "PLAYBACK_PAUSE",
@@ -104,27 +105,27 @@ ws.onmessage = (event) => {
             }, 5000);
 
             setTimeout(() => {
-                console.log("\n✓ Test sequence completed!");
-                console.log(`Room code: ${roomCode}`);
-                console.log("\nYou can connect another client to this room using:");
-                console.log(`  JOIN_ROOM with roomCode: "${roomCode}"\n`);
-                console.log("Press Ctrl+C to exit.\n");
+                logger.log("\n✓ Test sequence completed!");
+                logger.log(`Room code: ${roomCode}`);
+                logger.log("\nYou can connect another client to this room using:");
+                logger.log(`  JOIN_ROOM with roomCode: "${roomCode}"`);
+                logger.log("\nPress Ctrl+C to exit.");
             }, 6000);
             break;
     }
 };
 
 ws.onerror = (error) => {
-    console.error("WebSocket error:", error);
+    logger.error("WebSocket error:", error);
 };
 
 ws.onclose = () => {
-    console.log("Connection closed");
+    logger.log("Connection closed");
 };
 
 // Handle Ctrl+C
 process.on("SIGINT", () => {
-    console.log("\nClosing connection...");
+    logger.log("\nClosing connection...");
     ws.close();
     process.exit(0);
 });

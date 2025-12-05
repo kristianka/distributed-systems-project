@@ -10,6 +10,7 @@ import {
     type RaftRoomState,
     createRaftRoomState
 } from "../types";
+import { logger } from "../utils";
 
 // Raft timing configuration
 const ELECTION_TIMEOUT_MIN = 150; // ms
@@ -64,7 +65,7 @@ export class RaftConsensus {
      * Start the Raft consensus algorithm
      */
     start(): void {
-        console.log(`[Raft ${this.roomCode}] Node ${this.nodeId} starting as follower`);
+        logger.log(`[Raft ${this.roomCode}] Node ${this.nodeId} starting as follower`);
         this.resetElectionTimer();
     }
 
@@ -109,7 +110,7 @@ export class RaftConsensus {
      */
     async submitOperation(operation: RoomOperation): Promise<boolean> {
         if (!this.isLeader()) {
-            console.log(`[Raft ${this.roomCode}] Not leader, cannot submit operation`);
+            logger.log(`[Raft ${this.roomCode}] Not leader, cannot submit operation`);
             return false;
         }
 
@@ -121,7 +122,7 @@ export class RaftConsensus {
         };
         this.state.log.push(entry);
 
-        console.log(`[Raft ${this.roomCode}] Leader appended entry at index ${entry.index}`);
+        logger.log(`[Raft ${this.roomCode}] Leader appended entry at index ${entry.index}`);
 
         // Replicate to followers
         await this.replicateToFollowers();
@@ -153,7 +154,7 @@ export class RaftConsensus {
         if (canVote) {
             this.state.votedFor = candidateId;
             this.resetElectionTimer();
-            console.log(
+            logger.log(
                 `[Raft ${this.roomCode}] Node ${this.nodeId} voted for ${candidateId} in term ${term}`
             );
             return { term: this.state.currentTerm, voteGranted: true };
@@ -247,9 +248,7 @@ export class RaftConsensus {
      * Become a follower
      */
     private becomeFollower(term: number): void {
-        console.log(
-            `[Raft ${this.roomCode}] Node ${this.nodeId} becoming follower in term ${term}`
-        );
+        logger.log(`[Raft ${this.roomCode}] Node ${this.nodeId} becoming follower in term ${term}`);
         this.state.role = NodeRole.FOLLOWER;
         this.state.currentTerm = term;
         this.state.votedFor = null;
@@ -266,7 +265,7 @@ export class RaftConsensus {
         this.state.votedFor = this.nodeId;
         this.state.leaderId = null;
 
-        console.log(
+        logger.log(
             `[Raft ${this.roomCode}] Node ${this.nodeId} becoming candidate in term ${this.state.currentTerm}`
         );
 
@@ -277,7 +276,7 @@ export class RaftConsensus {
      * Become the leader
      */
     private becomeLeader(): void {
-        console.log(
+        logger.log(
             `[Raft ${this.roomCode}] Node ${this.nodeId} becoming LEADER in term ${this.state.currentTerm}`
         );
         this.state.role = NodeRole.LEADER;
@@ -330,7 +329,7 @@ export class RaftConsensus {
                     }
                 }
             } catch (error) {
-                console.log(`[Raft ${this.roomCode}] Failed to get vote from ${peerId}:`, error);
+                logger.log(`[Raft ${this.roomCode}] Failed to get vote from ${peerId}:`, error);
             }
         });
 
@@ -390,7 +389,7 @@ export class RaftConsensus {
                 this.state.nextIndex.set(peerId, Math.max(1, nextIndex - 1));
             }
         } catch (error) {
-            console.log(`[Raft ${this.roomCode}] Failed to replicate to ${peerId}:`, error);
+            logger.log(`[Raft ${this.roomCode}] Failed to replicate to ${peerId}:`, error);
         }
     }
 
@@ -426,7 +425,7 @@ export class RaftConsensus {
             this.state.lastApplied++;
             const entry = this.state.log[this.state.lastApplied - 1];
             if (entry) {
-                console.log(`[Raft ${this.roomCode}] Applying entry at index ${entry.index}`);
+                logger.log(`[Raft ${this.roomCode}] Applying entry at index ${entry.index}`);
                 this.onApplyOperation(entry.operation);
             }
         }
