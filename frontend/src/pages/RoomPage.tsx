@@ -60,6 +60,11 @@ export function RoomPage({ userId }: RoomPageProps) {
     const playerRef = useRef<YouTubePlayer | null>(null);
     const isRemoteUpdateRef = useRef(false);
     const lastSyncTimeRef = useRef(0);
+    const lastPositionRef = useRef(0);
+    const lastPositionTimeRef = useRef(Date.now());
+
+    console.log("[RoomPage] Rendering for room code:", roomCode);
+    console.log("[RoomPage] Current room state:", roomState);
 
     const handleRoomJoined = useCallback((_roomCode: string, state: RoomState) => {
         console.log("[RoomPage] Joined room with state:", state);
@@ -172,25 +177,41 @@ export function RoomPage({ userId }: RoomPageProps) {
         const state = event.data;
         const currentTime = player.getCurrentTime();
         const videoId = roomState.playback.currentVideoId || "";
+        const now = Date.now();
+
+        // Calculate expected position based on time elapsed
+        const timeSinceLastUpdate = (now - lastPositionTimeRef.current) / 1000;
+        const expectedPosition =
+            lastPositionRef.current + (roomState.playback.isPlaying ? timeSinceLastUpdate : 0);
+        const positionDiff = Math.abs(currentTime - expectedPosition);
+
+        // Detect if this is a seek (position jumped more than 2 seconds from expected)
+        const isSeek = positionDiff > 2;
+
+        // Update position tracking
+        lastPositionRef.current = currentTime;
+        lastPositionTimeRef.current = now;
 
         // 1 = playing, 2 = paused
         if (state === 1) {
+            // If this is a seek while playing, send seek then play
+            if (isSeek) {
+                console.log("[RoomPage] Local seek to", currentTime, "(resumed playing)");
+                seek(roomCode, currentTime);
+            }
             console.log("[RoomPage] Local play at", currentTime);
             play(roomCode, videoId, currentTime);
         } else if (state === 2) {
-            console.log("[RoomPage] Local pause at", currentTime);
-            pause(roomCode, currentTime);
+            // If this is a seek (scrubbing), only send seek, not pause
+            if (isSeek) {
+                console.log("[RoomPage] Local seek to", currentTime, "(while paused/scrubbing)");
+                seek(roomCode, currentTime);
+            } else {
+                // This is a real pause (not scrubbing)
+                console.log("[RoomPage] Local pause at", currentTime);
+                pause(roomCode, currentTime);
+            }
         }
-    };
-
-    const handleSeek = () => {
-        if (isRemoteUpdateRef.current || !roomCode || !playerRef.current) {
-            return;
-        }
-
-        const currentTime = playerRef.current.getCurrentTime();
-        console.log("[RoomPage] Local seek to", currentTime);
-        seek(roomCode, currentTime);
     };
 
     const handleAddVideo = (e: React.FormEvent) => {
@@ -314,7 +335,6 @@ export function RoomPage({ userId }: RoomPageProps) {
                                 }}
                                 onReady={handlePlayerReady}
                                 onStateChange={handlePlayerStateChange}
-                                onPause={handleSeek}
                                 className="absolute inset-0 w-full h-full"
                             />
                         ) : (

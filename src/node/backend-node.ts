@@ -3,6 +3,7 @@ import {
     type RpcMessage,
     type RoomOperation,
     type RoomState,
+    type RoomOperationPayload,
     RaftMessageType,
     RoomMessageType,
     ClientMessageType,
@@ -228,6 +229,37 @@ export class BackendNode {
                 this.createRoom(createPayload.roomCode, createPayload.userId);
             }
             return { success: true };
+        }
+
+        // Handle forwarded room operations from non-leader nodes
+        if (
+            message.type === RoomMessageType.PLAYLIST_ADD ||
+            message.type === RoomMessageType.PLAYLIST_REMOVE ||
+            message.type === RoomMessageType.PLAYBACK_PLAY ||
+            message.type === RoomMessageType.PLAYBACK_PAUSE ||
+            message.type === RoomMessageType.PLAYBACK_SEEK ||
+            message.type === RoomMessageType.CHAT_MESSAGE ||
+            message.type === RoomMessageType.ROOM_JOIN ||
+            message.type === RoomMessageType.ROOM_LEAVE
+        ) {
+            if (roomCode) {
+                const raft = this.roomRaft.get(roomCode);
+                if (raft?.isLeader()) {
+                    const operation: RoomOperation = {
+                        type: message.type as RoomMessageType,
+                        payload: payload as unknown as RoomOperationPayload,
+                        timestamp: Date.now()
+                    };
+                    raft.submitOperation(operation);
+                    return { success: true };
+                } else {
+                    logger.warn(
+                        `[Node ${this.nodeId}] Received forwarded operation but not leader for room ${roomCode}`
+                    );
+                    return { success: false, error: "Not leader" };
+                }
+            }
+            return { success: false, error: "No room code" };
         }
 
         return { error: "Unknown message type" };
