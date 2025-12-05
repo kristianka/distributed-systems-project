@@ -143,7 +143,7 @@ export class RoomStateManager {
     private applyPlaylistAdd(payload: PlaylistAddPayload): void {
         const video = {
             videoId: payload.videoId,
-            addedBy: "unknown", // Would come from the operation context
+            addedBy: payload.userId,
             addedAt: Date.now()
         };
 

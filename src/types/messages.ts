@@ -54,6 +54,7 @@ export interface PlaybackSeekPayload {
 export interface PlaylistAddPayload {
     roomCode: string;
     videoId: string;
+    userId: string;
     newVideoPosition: number;
 }
 
