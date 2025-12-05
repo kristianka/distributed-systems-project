@@ -2,6 +2,7 @@
   "name": "distributed-systems-project",
   "module": "index.ts",
   "type": "module",
+  "license": "MIT",
   "private": true,
   "scripts": {
     "node-a": "bun run src/index.ts node-a",
