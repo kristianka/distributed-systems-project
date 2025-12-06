@@ -1,0 +1,26 @@
+// Re-export all shared types
+export {
+    RoomMessageType,
+    ClientMessageType,
+    type RoomCreatePayload,
+    type RoomJoinPayload,
+    type RoomLeavePayload,
+    type PlaybackPlayPayload,
+    type PlaybackPausePayload,
+    type PlaybackSeekPayload,
+    type PlaylistAddPayload,
+    type PlaylistRemovePayload,
+    type ChatMessagePayload,
+    type RoomOperationPayload,
+    type ClientMessage,
+    type ServerMessage,
+    type ErrorPayload,
+    type RoomCreatedPayload,
+    type RoomJoinedPayload,
+    type RoomStateUpdatePayload,
+    type PlaylistVideo,
+    type ChatMessage,
+    type PlaybackState,
+    type Participant,
+    type RoomState
+} from "@shared/types";

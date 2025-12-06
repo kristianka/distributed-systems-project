@@ -179,11 +179,20 @@ export class RaftConsensus {
             };
         }
 
-        // If higher or equal term from leader, become follower
-        if (term >= this.state.currentTerm) {
+        // If higher term, step down to follower
+        if (term > this.state.currentTerm) {
             this.becomeFollower(term);
+        }
+
+        // Update leader if changed (only notify on actual change)
+        if (this.state.leaderId !== leaderId) {
             this.state.leaderId = leaderId;
             this.onLeaderChange(leaderId);
+        }
+
+        // If we're not a follower (e.g., we're a candidate), become follower
+        if (this.state.role !== NodeRole.FOLLOWER) {
+            this.becomeFollower(term);
         }
 
         this.resetElectionTimer();
@@ -249,7 +258,15 @@ export class RaftConsensus {
      * Become a follower
      */
     private becomeFollower(term: number): void {
-        logger.log(`[Raft ${this.roomCode}] Node ${this.nodeId} becoming follower in term ${term}`);
+        const wasAlreadyFollower =
+            this.state.role === NodeRole.FOLLOWER && this.state.currentTerm === term;
+
+        if (!wasAlreadyFollower) {
+            logger.log(
+                `[Raft ${this.roomCode}] Node ${this.nodeId} becoming follower in term ${term}`
+            );
+        }
+
         this.state.role = NodeRole.FOLLOWER;
         this.state.currentTerm = term;
         this.state.votedFor = null;

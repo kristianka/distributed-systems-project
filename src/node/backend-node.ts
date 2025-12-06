@@ -3,8 +3,10 @@ import {
     type RpcMessage,
     type RoomOperation,
     type RoomState,
+    type RoomOperationPayload,
     RaftMessageType,
     RoomMessageType,
+    ClientMessageType,
     type RequestVotePayload,
     type AppendEntriesPayload,
     type RoomCreatePayload
@@ -153,7 +155,7 @@ export class BackendNode {
                     // Send welcome message
                     ws.send(
                         JSON.stringify({
-                            type: "CONNECTED",
+                            type: ClientMessageType.CONNECTED,
                             payload: { clientId, nodeId: this.nodeId }
                         })
                     );
@@ -182,9 +184,17 @@ export class BackendNode {
      * Handle incoming RPC message from another node
      */
     private async handleRpcMessage(message: RpcMessage): Promise<unknown> {
-        logger.log(
-            `[Node ${this.nodeId}] Received RPC: ${message.type} from ${message.sourceNodeId}`
-        );
+        // Skip logging for frequent heartbeat messages (APPEND_ENTRIES without entries)
+        const isHeartbeat =
+            message.type === RaftMessageType.APPEND_ENTRIES &&
+            Array.isArray((message.payload as AppendEntriesPayload)?.entries) &&
+            (message.payload as AppendEntriesPayload).entries.length === 0;
+
+        if (!isHeartbeat) {
+            logger.log(
+                `[Node ${this.nodeId}] Received RPC: ${message.type} from ${message.sourceNodeId}`
+            );
+        }
 
         // Extract room code from message if present
         const payload = message.payload as Record<string, unknown>;
@@ -215,8 +225,41 @@ export class BackendNode {
         // Handle room operation messages (for creating rooms on follower nodes)
         if (message.type === RoomMessageType.ROOM_CREATE) {
             const createPayload = message.payload as RoomCreatePayload;
-            this.createRoom(createPayload.roomCode, createPayload.userId);
+            if (createPayload.roomCode) {
+                this.createRoom(createPayload.roomCode, createPayload.userId);
+            }
             return { success: true };
+        }
+
+        // Handle forwarded room operations from non-leader nodes
+        if (
+            message.type === RoomMessageType.PLAYLIST_ADD ||
+            message.type === RoomMessageType.PLAYLIST_REMOVE ||
+            message.type === RoomMessageType.PLAYBACK_PLAY ||
+            message.type === RoomMessageType.PLAYBACK_PAUSE ||
+            message.type === RoomMessageType.PLAYBACK_SEEK ||
+            message.type === RoomMessageType.CHAT_MESSAGE ||
+            message.type === RoomMessageType.ROOM_JOIN ||
+            message.type === RoomMessageType.ROOM_LEAVE
+        ) {
+            if (roomCode) {
+                const raft = this.roomRaft.get(roomCode);
+                if (raft?.isLeader()) {
+                    const operation: RoomOperation = {
+                        type: message.type as RoomMessageType,
+                        payload: payload as unknown as RoomOperationPayload,
+                        timestamp: Date.now()
+                    };
+                    raft.submitOperation(operation);
+                    return { success: true };
+                } else {
+                    logger.warn(
+                        `[Node ${this.nodeId}] Received forwarded operation but not leader for room ${roomCode}`
+                    );
+                    return { success: false, error: "Not leader" };
+                }
+            }
+            return { success: false, error: "No room code" };
         }
 
         return { error: "Unknown message type" };
@@ -235,28 +278,28 @@ export class BackendNode {
             logger.log(`[Node ${this.nodeId}] Client ${clientId} message: ${message.type}`);
 
             switch (message.type) {
-                case "SET_USER_ID":
-                    this.handleSetUserId(clientId, message.payload.userId as string);
+                case RoomMessageType.ROOM_CREATE:
+                    this.handleCreateRoom(clientId, message.payload.userId as string);
                     break;
 
-                case "CREATE_ROOM":
-                    this.handleCreateRoom(clientId);
+                case RoomMessageType.ROOM_JOIN:
+                    this.handleJoinRoom(
+                        clientId,
+                        message.payload.roomCode as string,
+                        message.payload.userId as string
+                    );
                     break;
 
-                case "JOIN_ROOM":
-                    this.handleJoinRoom(clientId, message.payload.roomCode as string);
-                    break;
-
-                case "LEAVE_ROOM":
+                case RoomMessageType.ROOM_LEAVE:
                     this.handleLeaveRoom(clientId, message.payload.roomCode as string);
                     break;
 
-                case "PLAYBACK_PLAY":
-                case "PLAYBACK_PAUSE":
-                case "PLAYBACK_SEEK":
-                case "PLAYLIST_ADD":
-                case "PLAYLIST_REMOVE":
-                case "CHAT_MESSAGE":
+                case RoomMessageType.PLAYBACK_PLAY:
+                case RoomMessageType.PLAYBACK_PAUSE:
+                case RoomMessageType.PLAYBACK_SEEK:
+                case RoomMessageType.PLAYLIST_ADD:
+                case RoomMessageType.PLAYLIST_REMOVE:
+                case RoomMessageType.CHAT_MESSAGE:
                     this.handleRoomOperation(clientId, message.type, message.payload);
                     break;
 
@@ -276,7 +319,7 @@ export class BackendNode {
         if (client) {
             client.userId = userId;
             this.sendToClient(clientId, {
-                type: "USER_ID_SET",
+                type: ClientMessageType.USER_ID_SET,
                 payload: { userId }
             });
         }
@@ -285,18 +328,17 @@ export class BackendNode {
     /**
      * Handle room creation request
      */
-    private handleCreateRoom(clientId: string): void {
+    private handleCreateRoom(clientId: string, userId: string): void {
         const client = this.clients.get(clientId);
-        if (!client || !client.userId) {
-            this.sendToClient(clientId, {
-                type: "ERROR",
-                payload: { message: "User ID not set" }
-            });
+        if (!client) {
             return;
         }
 
+        // Set user ID from payload
+        client.userId = userId;
+
         const roomCode = generateRoomCode();
-        this.createRoom(roomCode, client.userId);
+        this.createRoom(roomCode, userId);
 
         // Join the client to the room
         client.roomCode = roomCode;
@@ -304,12 +346,12 @@ export class BackendNode {
         // Notify other nodes to create the room
         this.broadcastToNodes({
             type: RoomMessageType.ROOM_CREATE,
-            payload: { roomCode, userId: client.userId }
+            payload: { roomCode, userId }
         });
 
         this.sendToClient(clientId, {
-            type: "ROOM_CREATED",
-            payload: { roomCode, state: this.rooms.get(roomCode)?.getState() }
+            type: ClientMessageType.ROOM_CREATED,
+            payload: { roomCode, roomState: this.rooms.get(roomCode)?.getState() }
         });
 
         logger.log(`[Node ${this.nodeId}] Room ${roomCode} created by ${client.userId}`);
@@ -344,7 +386,7 @@ export class BackendNode {
             onLeaderChange: (leaderId) => {
                 logger.log(`[Node ${this.nodeId}] Room ${roomCode} leader changed to ${leaderId}`);
                 this.broadcastToRoom(roomCode, {
-                    type: "LEADER_CHANGED",
+                    type: ClientMessageType.LEADER_CHANGED,
                     payload: { roomCode, leaderId }
                 });
             }
@@ -360,20 +402,19 @@ export class BackendNode {
     /**
      * Handle join room request
      */
-    private handleJoinRoom(clientId: string, roomCode: string): void {
+    private handleJoinRoom(clientId: string, roomCode: string, userId: string): void {
         const client = this.clients.get(clientId);
-        if (!client || !client.userId) {
-            this.sendToClient(clientId, {
-                type: "ERROR",
-                payload: { message: "User ID not set" }
-            });
+        if (!client) {
             return;
         }
+
+        // Set user ID from payload
+        client.userId = userId;
 
         const room = this.rooms.get(roomCode);
         if (!room) {
             this.sendToClient(clientId, {
-                type: "ERROR",
+                type: ClientMessageType.ERROR,
                 payload: { message: "Room not found" }
             });
             return;
@@ -386,7 +427,7 @@ export class BackendNode {
         if (raft?.isLeader()) {
             const operation: RoomOperation = {
                 type: RoomMessageType.ROOM_JOIN,
-                payload: { roomCode, userId: client.userId },
+                payload: { roomCode, userId },
                 timestamp: Date.now()
             };
             raft.submitOperation(operation);
@@ -396,7 +437,7 @@ export class BackendNode {
             if (leaderId) {
                 const operation: RoomOperation = {
                     type: RoomMessageType.ROOM_JOIN,
-                    payload: { roomCode, userId: client.userId },
+                    payload: { roomCode, userId },
                     timestamp: Date.now()
                 };
                 this.forwardToLeader(leaderId, operation).catch((error) => {
@@ -406,8 +447,8 @@ export class BackendNode {
         }
 
         this.sendToClient(clientId, {
-            type: "ROOM_JOINED",
-            payload: { roomCode, state: room.getState() }
+            type: ClientMessageType.ROOM_JOINED,
+            payload: { roomCode, roomState: room.getState() }
         });
 
         logger.log(`[Node ${this.nodeId}] User ${client.userId} joined room ${roomCode}`);
@@ -446,7 +487,7 @@ export class BackendNode {
         client.roomCode = null;
 
         this.sendToClient(clientId, {
-            type: "ROOM_LEFT",
+            type: ClientMessageType.ROOM_LEFT,
             payload: { roomCode }
         });
     }
@@ -462,7 +503,7 @@ export class BackendNode {
         const client = this.clients.get(clientId);
         if (!client || !client.roomCode) {
             this.sendToClient(clientId, {
-                type: "ERROR",
+                type: ClientMessageType.ERROR,
                 payload: { message: "Not in a room" }
             });
             return;
@@ -474,7 +515,7 @@ export class BackendNode {
 
         if (!room) {
             this.sendToClient(clientId, {
-                type: "ERROR",
+                type: ClientMessageType.ERROR,
                 payload: { message: "Room not found" }
             });
             return;
@@ -504,14 +545,14 @@ export class BackendNode {
                 this.forwardToLeader(leaderId, operation).catch((error) => {
                     logger.error(`[Node ${this.nodeId}] Failed to forward to leader:`, error);
                     this.sendToClient(clientId, {
-                        type: "ERROR",
+                        type: ClientMessageType.ERROR,
                         payload: { message: "Failed to process operation - leader unavailable" }
                     });
                 });
             } else {
                 // No leader elected yet
                 this.sendToClient(clientId, {
-                    type: "ERROR",
+                    type: ClientMessageType.ERROR,
                     payload: { message: "No leader available - please try again" }
                 });
             }
@@ -533,8 +574,8 @@ export class BackendNode {
      */
     private broadcastRoomState(roomCode: string, state: RoomState): void {
         this.broadcastToRoom(roomCode, {
-            type: "ROOM_STATE_UPDATE",
-            payload: { roomCode, state }
+            type: ClientMessageType.ROOM_STATE_UPDATE,
+            payload: { roomCode, roomState: state }
         });
     }
 
