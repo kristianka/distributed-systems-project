@@ -13,6 +13,7 @@ import {
 interface UseWebSocketOptions {
     url: string;
     userId: string;
+    username: string;
     onRoomCreated?: (roomCode: string, state: RoomState) => void;
     onRoomJoined?: (roomCode: string, state: RoomState) => void;
     onRoomStateUpdate?: (state: RoomState) => void;
@@ -40,6 +41,7 @@ export function useWebSocket(options: UseWebSocketOptions): UseWebSocketReturn {
     const {
         url,
         userId,
+        username,
         onRoomCreated,
         onRoomJoined,
         onRoomStateUpdate,
@@ -234,14 +236,14 @@ export function useWebSocket(options: UseWebSocketOptions): UseWebSocketReturn {
     }, []);
 
     const createRoom = useCallback(() => {
-        send(RoomMessageType.ROOM_CREATE, { userId });
-    }, [send, userId]);
+        send(RoomMessageType.ROOM_CREATE, { userId, username });
+    }, [send, userId, username]);
 
     const joinRoom = useCallback(
         (roomCode: string) => {
-            send(RoomMessageType.ROOM_JOIN, { roomCode, userId });
+            send(RoomMessageType.ROOM_JOIN, { roomCode, userId, username });
         },
-        [send, userId]
+        [send, userId, username]
     );
 
     const leaveRoom = useCallback(
@@ -300,11 +302,12 @@ export function useWebSocket(options: UseWebSocketOptions): UseWebSocketReturn {
             send(RoomMessageType.CHAT_MESSAGE, {
                 roomCode,
                 userId,
+                username,
                 messageText,
                 timestamp: Date.now()
             });
         },
-        [send, userId]
+        [send, userId, username]
     );
 
     return {

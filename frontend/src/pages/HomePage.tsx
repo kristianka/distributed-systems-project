@@ -6,12 +6,13 @@ import { RoomState } from "../types";
 
 interface HomePageProps {
     userId: string;
+    username: string;
     nodeUrl: string;
     connectionFailed?: boolean;
     onRetry?: () => void;
 }
 
-export function HomePage({ userId, nodeUrl, connectionFailed, onRetry }: HomePageProps) {
+export function HomePage({ userId, username, nodeUrl, connectionFailed, onRetry }: HomePageProps) {
     const navigate = useNavigate();
     const [joinCode, setJoinCode] = useState("");
     const [error, setError] = useState<string | null>(null);
@@ -42,6 +43,7 @@ export function HomePage({ userId, nodeUrl, connectionFailed, onRetry }: HomePag
     const { isConnected, createRoom, joinRoom } = useWebSocket({
         url: nodeUrl,
         userId,
+        username,
         onRoomCreated: handleRoomCreated,
         onRoomJoined: handleRoomJoined,
         onError: handleError,

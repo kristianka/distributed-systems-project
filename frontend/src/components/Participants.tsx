@@ -1,5 +1,5 @@
 import { Participant } from "../types";
-import { getDisplayName, formatTime } from "../utils";
+import { formatTime } from "../utils";
 
 interface ParticipantsProps {
     participants: Participant[];
@@ -37,7 +37,7 @@ export function Participants({ participants, currentUserId }: ParticipantsProps)
                             {/* Info */}
                             <div className="flex-1 min-w-0">
                                 <span className="text-sm text-white font-medium">
-                                    {getDisplayName(participant.userId)}
+                                    {participant.username}
                                     {participant.userId === currentUserId && (
                                         <span className="text-zinc-400"> (you)</span>
                                     )}

@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { ChatMessage } from "../types";
-import { getDisplayName, formatTime } from "../utils";
+import { formatTime } from "../utils";
 
 interface ChatProps {
     messages: ChatMessage[];
@@ -56,9 +56,7 @@ export function Chat({ messages, currentUserId, onSendMessage }: ChatProps) {
                                 }`}
                             >
                                 <span className="font-semibold">
-                                    {msg.userId === currentUserId
-                                        ? "You"
-                                        : getDisplayName(msg.userId)}
+                                    {msg.userId === currentUserId ? "You" : msg.username}
                                 </span>
                                 <span className="text-[10px]">{formatTime(msg.timestamp)}</span>
                             </div>

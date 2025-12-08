@@ -10,6 +10,7 @@ import { Participants } from "../components/Participants";
 
 interface RoomPageProps {
     userId: string;
+    username: string;
     nodeUrl: string;
 }
 
@@ -38,7 +39,7 @@ function extractVideoId(input: string): string | null {
     return null;
 }
 
-export function RoomPage({ userId, nodeUrl }: RoomPageProps) {
+export function RoomPage({ userId, username, nodeUrl }: RoomPageProps) {
     const { roomCode } = useParams<{ roomCode: string }>();
     const navigate = useNavigate();
 
@@ -133,6 +134,7 @@ export function RoomPage({ userId, nodeUrl }: RoomPageProps) {
     } = useWebSocket({
         url: nodeUrl,
         userId,
+        username,
         onRoomJoined: handleRoomJoined,
         onRoomStateUpdate: handleRoomStateUpdate,
         onError: handleError,
