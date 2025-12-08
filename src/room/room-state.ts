@@ -24,8 +24,13 @@ export class RoomStateManager {
     private state: RoomState;
     private onStateChange: (state: RoomState) => void;
 
-    constructor(roomCode: string, creatorId: string, onStateChange: (state: RoomState) => void) {
-        this.state = createRoomState(roomCode, creatorId);
+    constructor(
+        roomCode: string,
+        creatorId: string,
+        creatorUsername: string,
+        onStateChange: (state: RoomState) => void
+    ) {
+        this.state = createRoomState(roomCode, creatorId, creatorUsername);
         this.onStateChange = onStateChange;
     }
 
@@ -91,11 +96,14 @@ export class RoomStateManager {
 
         this.state.participants.push({
             userId: payload.userId,
+            username: payload.username,
             joinedAt: Date.now(),
             isCreator: false
         });
 
-        logger.log(`[Room ${this.state.roomCode}] User ${payload.userId} joined`);
+        logger.log(
+            `[Room ${this.state.roomCode}] User ${payload.username} (${payload.userId}) joined`
+        );
     }
 
     private applyRoomLeave(payload: RoomLeavePayload): void {
@@ -169,6 +177,7 @@ export class RoomStateManager {
         const message: ChatMessage = {
             id: `${payload.timestamp}-${payload.userId}`,
             userId: payload.userId,
+            username: payload.username,
             messageText: payload.messageText,
             timestamp: payload.timestamp
         };
@@ -181,7 +190,7 @@ export class RoomStateManager {
         }
 
         logger.log(
-            `[Room ${this.state.roomCode}] Chat from ${payload.userId}: ${payload.messageText}`
+            `[Room ${this.state.roomCode}] Chat from ${payload.username} (${payload.userId}): ${payload.messageText}`
         );
     }
 

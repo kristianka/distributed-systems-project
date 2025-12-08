@@ -8,7 +8,7 @@ export {
 } from "../../shared/types";
 
 // Create initial room state
-export const createRoomState = (roomCode: string, creatorId: string) => {
+export const createRoomState = (roomCode: string, creatorId: string, creatorUsername: string) => {
     return {
         roomCode,
         createdAt: Date.now(),
@@ -23,6 +23,7 @@ export const createRoomState = (roomCode: string, creatorId: string) => {
         participants: [
             {
                 userId: creatorId,
+                username: creatorUsername,
                 joinedAt: Date.now(),
                 isCreator: true
             }
