@@ -136,10 +136,11 @@ export function NodeStatusProvider({ children }: NodeStatusProviderProps) {
             const ws = new WebSocket(node.url);
             websockets.push(ws);
 
-            const timeoutDuration = isStoredNode ? 1000 : 1500;
+            // Increase timeout to 3s for stored node, 4s for others
+            const timeoutDuration = isStoredNode ? 3000 : 4000;
             const timeout = setTimeout(() => {
                 if (!hasConnectedRef.current && ws.readyState !== WebSocket.OPEN) {
-                    console.log(`[NodeStatus] ${node.name} timed out`);
+                    console.log(`[NodeStatus] ${node.name} timed out after ${timeoutDuration}ms`);
                     ws.onopen = null;
                     ws.onerror = null;
                     ws.close();
@@ -175,7 +176,7 @@ export function NodeStatusProvider({ children }: NodeStatusProviderProps) {
 
             tryConnect(storedIndex, true);
 
-            // After a short delay, try other nodes in parallel
+            // After 1.5s, try other nodes in parallel if stored node hasn't connected
             const fallbackTimeout = setTimeout(() => {
                 if (!hasConnectedRef.current) {
                     console.log(`[NodeStatus] Stored node slow/failed, trying all nodes...`);
@@ -185,7 +186,7 @@ export function NodeStatusProvider({ children }: NodeStatusProviderProps) {
                         }
                     });
                 }
-            }, 500);
+            }, 1500);
             timeouts.push(fallbackTimeout);
         } else {
             // No stored node, try all nodes in parallel
@@ -193,7 +194,7 @@ export function NodeStatusProvider({ children }: NodeStatusProviderProps) {
             nodes.forEach((_, index) => tryConnect(index));
         }
 
-        // Final timeout to detect all failures
+        // Final timeout to detect all failures (must be longer than individual timeouts)
         const finalTimeout = setTimeout(() => {
             if (!hasConnectedRef.current) {
                 console.error("[NodeStatus] All nodes failed to connect");
@@ -203,7 +204,7 @@ export function NodeStatusProvider({ children }: NodeStatusProviderProps) {
                 setConnectionFailed(true);
                 lastCheckRef.current = Date.now();
             }
-        }, 3000);
+        }, 6000);
         timeouts.push(finalTimeout);
 
         return () => {

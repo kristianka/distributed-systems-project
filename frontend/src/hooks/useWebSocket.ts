@@ -123,6 +123,12 @@ export function useWebSocket(options: UseWebSocketOptions): UseWebSocketReturn {
     useEffect(() => {
         let isMounted = true;
 
+        // Don't try to connect if URL is empty or invalid
+        if (!url || !url.startsWith("ws")) {
+            console.log("[WebSocket] No valid URL provided, waiting...");
+            return;
+        }
+
         // Clean up any existing connection
         if (reconnectTimeoutRef.current) {
             clearTimeout(reconnectTimeoutRef.current);
