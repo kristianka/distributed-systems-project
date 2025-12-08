@@ -26,6 +26,8 @@ interface NodeStatusContextValue {
     connectionFailed: boolean;
     retry: () => void;
     refreshStatuses: () => void;
+    /** Call this when the WebSocket connection is lost to trigger automatic failover */
+    onConnectionLost: () => void;
 }
 
 const NodeStatusContext = createContext<NodeStatusContextValue | null>(null);
@@ -286,6 +288,24 @@ export function NodeStatusProvider({ children }: NodeStatusProviderProps) {
         setRetryTrigger((t) => t + 1);
     }, []);
 
+    // Called when WebSocket connection is lost - triggers immediate failover to another node
+    const onConnectionLost = useCallback(() => {
+        console.log("[NodeStatus] Connection lost, attempting failover...");
+
+        // Mark current node as unavailable
+        if (connectedNodeIndex !== null) {
+            setNodeStatuses((prev) =>
+                prev.map((s, i) => (i === connectedNodeIndex ? { ...s, status: "unavailable" } : s))
+            );
+        }
+
+        // Trigger reconnection attempt to find a new node
+        hasConnectedRef.current = false;
+        isConnectingRef.current = false;
+        setConnectedNodeIndex(null);
+        setRetryTrigger((t) => t + 1);
+    }, [connectedNodeIndex]);
+
     const refreshStatuses = useCallback(() => {
         const now = Date.now();
         if (now - lastCheckRef.current < 5000) {
@@ -336,7 +356,8 @@ export function NodeStatusProvider({ children }: NodeStatusProviderProps) {
         isConnecting,
         connectionFailed,
         retry,
-        refreshStatuses
+        refreshStatuses,
+        onConnectionLost
     };
 
     return <NodeStatusContext.Provider value={value}>{children}</NodeStatusContext.Provider>;

@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import YouTube, { YouTubeEvent, YouTubePlayer } from "react-youtube";
 import { useWebSocket } from "../hooks";
+import { useNodeStatus } from "../context";
 import { RoomState } from "../types";
 import { Chat } from "../components/Chat";
 import { Playlist } from "../components/Playlist";
@@ -117,6 +118,8 @@ export function RoomPage({ userId, nodeUrl }: RoomPageProps) {
         setError(message);
     }, []);
 
+    const { onConnectionLost } = useNodeStatus();
+
     const {
         isConnected,
         joinRoom,
@@ -132,7 +135,8 @@ export function RoomPage({ userId, nodeUrl }: RoomPageProps) {
         userId,
         onRoomJoined: handleRoomJoined,
         onRoomStateUpdate: handleRoomStateUpdate,
-        onError: handleError
+        onError: handleError,
+        onConnectionLost
     });
 
     // Join room on mount

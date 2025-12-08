@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useWebSocket } from "../hooks";
+import { useNodeStatus } from "../context";
 import { RoomState } from "../types";
 
 interface HomePageProps {
@@ -36,12 +37,15 @@ export function HomePage({ userId, nodeUrl, connectionFailed, onRetry }: HomePag
         setIsJoining(false);
     };
 
+    const { onConnectionLost } = useNodeStatus();
+
     const { isConnected, createRoom, joinRoom } = useWebSocket({
         url: nodeUrl,
         userId,
         onRoomCreated: handleRoomCreated,
         onRoomJoined: handleRoomJoined,
-        onError: handleError
+        onError: handleError,
+        onConnectionLost
     });
 
     const handleCreateRoom = () => {
