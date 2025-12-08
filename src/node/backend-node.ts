@@ -190,11 +190,13 @@ export class BackendNode {
      * Handle incoming RPC message from another node
      */
     private async handleRpcMessage(message: RpcMessage): Promise<unknown> {
-        // Skip logging for all APPEND_ENTRIES messages (both heartbeats and replication)
-        // These happen very frequently (every 50ms) and spam the console
-        const isAppendEntries = message.type === RaftMessageType.APPEND_ENTRIES;
+        // Skip logging for frequent Raft messages (APPEND_ENTRIES and REQUEST_VOTE)
+        // These can spam the console during elections and normal operation
+        const isRaftMessage =
+            message.type === RaftMessageType.APPEND_ENTRIES ||
+            message.type === RaftMessageType.REQUEST_VOTE;
 
-        if (!isAppendEntries) {
+        if (!isRaftMessage) {
             logger.log(
                 `[Node ${this.nodeId}] Received RPC: ${message.type} from ${message.sourceNodeId}`
             );

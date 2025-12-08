@@ -14,8 +14,9 @@ import { logger } from "../utils";
 
 // Raft timing configuration
 // Tuned for real-time playback sync (responsive but not excessive)
+// Wide election timeout range to reduce split-vote probability
 const ELECTION_TIMEOUT_MIN = 300; // ms
-const ELECTION_TIMEOUT_MAX = 500; // ms
+const ELECTION_TIMEOUT_MAX = 600; // ms (wider range to avoid split votes)
 const HEARTBEAT_INTERVAL = 100; // ms
 
 /**
@@ -160,6 +161,15 @@ export class RaftConsensus {
             );
             return { term: this.state.currentTerm, voteGranted: true };
         }
+
+        // Log why vote was rejected (for debugging)
+        const reason =
+            this.state.votedFor !== null && this.state.votedFor !== candidateId
+                ? `already voted for ${this.state.votedFor}`
+                : `log not up-to-date`;
+        logger.log(
+            `[Raft ${this.roomCode}] Node ${this.nodeId} rejected vote for ${candidateId} in term ${term}: ${reason}`
+        );
 
         return { term: this.state.currentTerm, voteGranted: false };
     }
@@ -321,7 +331,9 @@ export class RaftConsensus {
         const lastLogTerm = lastLogIndex > 0 ? this.state.log[lastLogIndex - 1]!.term : 0;
 
         let votesReceived = 1; // Vote for self
-        const votesNeeded = Math.floor((this.peerNodeIds.length + 1) / 2) + 1;
+        const totalNodes = this.peerNodeIds.length + 1;
+        // Majority = more than half. For 2 nodes: need 2, for 3 nodes: need 2, for 5 nodes: need 3
+        const votesNeeded = Math.floor(totalNodes / 2) + 1;
 
         const votePromises = this.peerNodeIds.map(async (peerId) => {
             try {
