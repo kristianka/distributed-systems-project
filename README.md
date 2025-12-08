@@ -8,7 +8,7 @@ A distributed YouTube watch-together system where users join a room using a 6-di
 
 The system consists of:
 
--   **3 Backend Nodes** (Node A, B, C) - Each runs on its own port
+-   **N Backend Nodes** - Configurable via environment variables
 -   **Raft Consensus** - For leader election and log replication per room
 -   **WebSocket** - For client connections
 -   **RPC over HTTP** - For inter-node communication
@@ -24,34 +24,105 @@ Each room has:
 ## Prerequisites
 
 -   [Bun](https://bun.sh/) runtime (v1.0+)
+-   [Node.js](https://nodejs.org/) (for frontend)
 
 ## Installation
 
 ```bash
+# Install backend dependencies
 bun install
+
+# Install frontend dependencies
+cd frontend && npm install
 ```
+
+## Configuration
+
+The system requires environment variables to configure backend nodes and frontend connections.
+
+### Backend Configuration
+
+Create a `.env` file in the project root:
+
+```env
+# This node's ID (must match one entry in CLUSTER_NODES)
+NODE_ID=node-a
+
+# All nodes in the cluster
+# Format: nodeId:host:port:rpcPort
+CLUSTER_NODES=node-a:localhost:8741:9741,node-b:localhost:8742:9742,node-c:localhost:8743:9743
+```
+
+### Frontend Configuration
+
+Create a `.env` file in the `frontend/` directory:
+
+```env
+# WebSocket URLs of the backend servers to connect to
+VITE_NODES=ws://localhost:8741/ws,ws://localhost:8742/ws,ws://localhost:8743/ws
+```
+
+### Adding More Nodes
+
+To run with 5 nodes instead of 3:
+
+**Backend `.env`:**
+
+```env
+NODE_ID=node-a
+CLUSTER_NODES=node-a:localhost:8741:9741,node-b:localhost:8742:9742,node-c:localhost:8743:9743,node-d:localhost:8744:9744,node-e:localhost:8745:9745
+```
+
+**Frontend `frontend/.env`:**
+
+```env
+VITE_NODES=ws://localhost:8741/ws,ws://localhost:8742/ws,ws://localhost:8743/ws,ws://localhost:8744/ws,ws://localhost:8745/ws
+```
+
+> **Note:** For Raft consensus, use an odd number of nodes (3, 5, 7...) for better fault tolerance.
+>
+> -   3 nodes: tolerates 1 failure
+> -   5 nodes: tolerates 2 failures
 
 ## Running the System
 
-### Start all three nodes (recommended for testing)
+### Development (backend + frontend)
+
+```bash
+bun run dev
+```
+
+This starts all backend nodes and the frontend dev server concurrently.
+
+### Start backend nodes only
 
 ```bash
 bun run start-all
 ```
 
-This starts all three nodes concurrently:
-
--   Node A: WebSocket on port 3001, RPC on port 4001
--   Node B: WebSocket on port 3002, RPC on port 4002
--   Node C: WebSocket on port 3003, RPC on port 4003
-
 ### Start nodes individually
+
+Each node needs its own `NODE_ID` environment variable:
 
 ```bash
 # In separate terminals:
+NODE_ID=node-a bun run src/index.ts
+NODE_ID=node-b bun run src/index.ts
+NODE_ID=node-c bun run src/index.ts
+```
+
+Or use the npm scripts (these use command line args instead):
+
+```bash
 bun run node-a
 bun run node-b
 bun run node-c
+```
+
+### Start frontend only
+
+```bash
+bun run frontend:dev
 ```
 
 ### Run the test client
