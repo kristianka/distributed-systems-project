@@ -1,6 +1,1 @@
-export {
-    DEFAULT_CLUSTER_CONFIG,
-    getNodeConfig,
-    getPeerConfigs,
-    parseNodeConfigFromEnv
-} from "./cluster";
+export { getClusterConfig, getNodeConfig, getPeerConfigs, parseNodeConfigFromEnv } from "./cluster";

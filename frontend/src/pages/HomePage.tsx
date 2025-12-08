@@ -5,21 +5,10 @@ import { RoomState } from "../types";
 
 interface HomePageProps {
     userId: string;
+    nodeUrl: string;
 }
 
-// Get WebSocket URL based on environment
-function getWebSocketUrl(): string {
-    const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-    const host = window.location.hostname;
-
-    if (host === "localhost" || host === "127.0.0.1") {
-        return "ws://localhost:3001/ws";
-    }
-
-    return `${protocol}//${host}/ws`;
-}
-
-export function HomePage({ userId }: HomePageProps) {
+export function HomePage({ userId, nodeUrl }: HomePageProps) {
     const navigate = useNavigate();
     const [joinCode, setJoinCode] = useState("");
     const [error, setError] = useState<string | null>(null);
@@ -46,7 +35,7 @@ export function HomePage({ userId }: HomePageProps) {
     };
 
     const { isConnected, createRoom, joinRoom } = useWebSocket({
-        url: getWebSocketUrl(),
+        url: nodeUrl,
         userId,
         onRoomCreated: handleRoomCreated,
         onRoomJoined: handleRoomJoined,
@@ -73,6 +62,8 @@ export function HomePage({ userId }: HomePageProps) {
         setIsJoining(true);
         joinRoom(joinCode.toUpperCase());
     };
+
+    // todo favicon
 
     return (
         <div className="flex justify-center items-center min-h-full p-8">

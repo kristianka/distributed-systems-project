@@ -15,7 +15,7 @@ export default defineConfig({
         port: 5173,
         proxy: {
             "/ws": {
-                target: "ws://localhost:3001",
+                target: "ws://localhost:8741",
                 ws: true,
                 rewriteWsOrigin: true
             }
