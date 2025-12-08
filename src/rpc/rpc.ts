@@ -72,6 +72,114 @@ export class RpcClient {
     getPeerNodeIds(): string[] {
         return Array.from(this.peerNodes.keys());
     }
+
+    /**
+     * Check health of a specific peer node
+     */
+    async checkPeerHealth(targetNodeId: string): Promise<boolean> {
+        const peer = this.peerNodes.get(targetNodeId);
+        if (!peer) {
+            return false;
+        }
+
+        const url = `http://${peer.host}:${peer.rpcPort}/health`;
+
+        try {
+            const response = await fetch(url, {
+                method: "GET",
+                signal: AbortSignal.timeout(3000) // 3 second timeout
+            });
+
+            if (response.ok) {
+                const data = (await response.json()) as { status: string; nodeId: string };
+                return data.status === "ok" && data.nodeId === targetNodeId;
+            }
+            return false;
+        } catch {
+            return false;
+        }
+    }
+
+    /**
+     * Check health of all peer nodes and log results
+     */
+    async checkAllPeersHealth(): Promise<Map<string, boolean>> {
+        const results = new Map<string, boolean>();
+        const peerIds = this.getPeerNodeIds();
+
+        logger.log(`[RPC ${this.nodeId}] Checking connectivity to ${peerIds.length} peer(s)...`);
+
+        const checks = peerIds.map(async (peerId) => {
+            const healthy = await this.checkPeerHealth(peerId);
+            results.set(peerId, healthy);
+            return { peerId, healthy };
+        });
+
+        const checkResults = await Promise.all(checks);
+
+        for (const { peerId, healthy } of checkResults) {
+            if (healthy) {
+                logger.log(`[RPC ${this.nodeId}] ✅ Peer ${peerId} is reachable`);
+            } else {
+                logger.warn(`[RPC ${this.nodeId}] ❌ Peer ${peerId} is NOT reachable`);
+            }
+        }
+
+        const healthyCount = checkResults.filter((r) => r.healthy).length;
+        if (healthyCount === peerIds.length) {
+            logger.log(
+                `[RPC ${this.nodeId}] All peers reachable (${healthyCount}/${peerIds.length})`
+            );
+        } else if (healthyCount > 0) {
+            logger.warn(
+                `[RPC ${this.nodeId}] Some peers unreachable (${healthyCount}/${peerIds.length} online)`
+            );
+        } else {
+            logger.warn(`[RPC ${this.nodeId}] No peers reachable - running in standalone mode`);
+        }
+
+        return results;
+    }
+
+    /**
+     * Wait for all peers to become available, with retries
+     * @param maxRetries Maximum number of retry attempts (0 = infinite)
+     * @param retryDelayMs Delay between retries in milliseconds
+     */
+    async waitForPeers(maxRetries: number = 0, retryDelayMs: number = 3000): Promise<boolean> {
+        const peerIds = this.getPeerNodeIds();
+        if (peerIds.length === 0) {
+            logger.log(`[RPC ${this.nodeId}] No peers configured, skipping connectivity check`);
+            return true;
+        }
+
+        let attempt = 0;
+        while (maxRetries === 0 || attempt < maxRetries) {
+            attempt++;
+
+            if (attempt > 1) {
+                logger.log(
+                    `[RPC ${this.nodeId}] Retry attempt ${attempt}${
+                        maxRetries > 0 ? `/${maxRetries}` : ""
+                    }...`
+                );
+            }
+
+            const results = await this.checkAllPeersHealth();
+            const allHealthy = Array.from(results.values()).every((healthy) => healthy);
+
+            if (allHealthy) {
+                return true;
+            }
+
+            // Wait before retrying
+            logger.log(`[RPC ${this.nodeId}] Waiting ${retryDelayMs / 1000}s before retry...`);
+            await new Promise((resolve) => setTimeout(resolve, retryDelayMs));
+        }
+
+        logger.warn(`[RPC ${this.nodeId}] Max retries reached, continuing with available peers`);
+        return false;
+    }
 }
 
 /**

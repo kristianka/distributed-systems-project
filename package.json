@@ -5,6 +5,7 @@
   "license": "MIT",
   "private": true,
   "scripts": {
+    "start": "bun run src/index.ts",
     "node-a": "bun run src/index.ts node-a",
     "node-b": "bun run src/index.ts node-b",
     "node-c": "bun run src/index.ts node-c",

@@ -70,7 +70,7 @@ export class BackendNode {
     /**
      * Start the backend node
      */
-    start(): void {
+    async start(): Promise<void> {
         logger.log(`[Node ${this.nodeId}] Starting...`);
 
         // Start RPC server for inter-node communication
@@ -82,6 +82,12 @@ export class BackendNode {
         logger.log(`[Node ${this.nodeId}] Ready`);
         logger.log(`  - Client WebSocket: ws://localhost:${this.config.port}`);
         logger.log(`  - RPC Server: http://localhost:${this.config.rpcPort}`);
+
+        // Wait for peers to become available (retries indefinitely)
+        // This runs in background so node is still operational
+        this.rpcClient.waitForPeers(0, 3000).catch((err) => {
+            logger.error(`[Node ${this.nodeId}] Error waiting for peers:`, err);
+        });
     }
 
     /**
