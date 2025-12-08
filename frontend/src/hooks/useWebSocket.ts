@@ -49,6 +49,8 @@ export function useWebSocket(options: UseWebSocketOptions): UseWebSocketReturn {
     const [isConnected, setIsConnected] = useState(false);
     const wsRef = useRef<WebSocket | null>(null);
     const reconnectTimeoutRef = useRef<number | null>(null);
+    const reconnectDelayRef = useRef(1000); // Start with 1 second
+    const maxReconnectDelay = 30000; // Max 30 seconds
 
     // Store callbacks in refs to avoid reconnection on callback changes
     const callbacksRef = useRef({
@@ -151,6 +153,7 @@ export function useWebSocket(options: UseWebSocketOptions): UseWebSocketReturn {
                 if (!isMounted) return;
                 console.log("[WebSocket] Connected");
                 setIsConnected(true);
+                reconnectDelayRef.current = 1000; // Reset delay on successful connection
                 callbacksRef.current.onConnected?.();
             };
 
@@ -160,11 +163,16 @@ export function useWebSocket(options: UseWebSocketOptions): UseWebSocketReturn {
                 setIsConnected(false);
                 callbacksRef.current.onDisconnected?.();
 
-                // Attempt to reconnect after 3 seconds
+                // Attempt to reconnect with exponential backoff
+                const delay = reconnectDelayRef.current;
+                console.log(`[WebSocket] Reconnecting in ${delay / 1000}s...`);
                 reconnectTimeoutRef.current = window.setTimeout(() => {
                     console.log("[WebSocket] Attempting to reconnect...");
                     connect();
-                }, 3000);
+                }, delay);
+
+                // Increase delay for next attempt (exponential backoff with max)
+                reconnectDelayRef.current = Math.min(delay * 2, maxReconnectDelay);
             };
 
             ws.onerror = (error) => {

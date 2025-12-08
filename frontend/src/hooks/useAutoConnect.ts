@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { getBackendNodes, setStoredNodeIndex } from "../config";
+import { getBackendNodes, setStoredNodeIndex, getStoredNodeIndex } from "../config";
 
 interface UseAutoConnectOptions {
     onConnected?: (nodeIndex: number, nodeName: string) => void;
@@ -25,109 +25,188 @@ export function useAutoConnect(options: UseAutoConnectOptions = {}): UseAutoConn
     const [connectedNodeIndex, setConnectedNodeIndex] = useState<number | null>(null);
     const [isConnecting, setIsConnecting] = useState(true);
     const [connectionFailed, setConnectionFailed] = useState(false);
-    const [attemptCount, setAttemptCount] = useState(0);
+    const [retryTrigger, setRetryTrigger] = useState(0);
 
     const nodes = getBackendNodes();
-    const attemptsRef = useRef<Set<number>>(new Set());
-    const wsRef = useRef<WebSocket | null>(null);
+    const isConnectingRef = useRef(false);
+    const hasConnectedRef = useRef(false);
 
-    const tryConnect = useCallback(
-        (nodeIndex: number) => {
-            if (nodeIndex >= nodes.length) {
-                // All nodes failed
-                console.error("[AutoConnect] All nodes failed to connect");
-                setIsConnecting(false);
-                setConnectionFailed(true);
-                onConnectionFailed?.();
+    // Store callbacks in refs to avoid dependency issues
+    const callbacksRef = useRef({ onConnected, onConnectionFailed });
+    useEffect(() => {
+        callbacksRef.current = { onConnected, onConnectionFailed };
+    }, [onConnected, onConnectionFailed]);
+
+    useEffect(() => {
+        // Prevent multiple concurrent connection attempts
+        if (isConnectingRef.current) {
+            return;
+        }
+
+        isConnectingRef.current = true;
+        hasConnectedRef.current = false;
+        setIsConnecting(true);
+        setConnectionFailed(false);
+
+        const websockets: WebSocket[] = [];
+        const timeouts: ReturnType<typeof setTimeout>[] = [];
+
+        const cleanup = () => {
+            timeouts.forEach((t) => clearTimeout(t));
+            websockets.forEach((ws) => {
+                ws.onopen = null;
+                ws.onerror = null;
+                ws.onclose = null;
+                if (ws.readyState === WebSocket.CONNECTING || ws.readyState === WebSocket.OPEN) {
+                    ws.close();
+                }
+            });
+        };
+
+        const handleSuccess = (nodeIndex: number, ws: WebSocket) => {
+            if (hasConnectedRef.current) {
+                ws.close();
+                return;
+            }
+            hasConnectedRef.current = true;
+            cleanup();
+
+            const node = nodes[nodeIndex];
+            console.log(`[AutoConnect] Connected to ${node.name}!`);
+            setConnectedNodeIndex(nodeIndex);
+            setStoredNodeIndex(nodeIndex);
+            setIsConnecting(false);
+            setConnectionFailed(false);
+            isConnectingRef.current = false;
+            callbacksRef.current.onConnected?.(nodeIndex, node.name);
+            ws.close(); // Close test connection, actual hook will reconnect
+        };
+
+        const tryConnect = (nodeIndex: number) => {
+            if (hasConnectedRef.current || nodeIndex >= nodes.length) {
                 return;
             }
 
             const node = nodes[nodeIndex];
             console.log(`[AutoConnect] Trying ${node.name} at ${node.url}...`);
 
-            // Close any existing connection
-            if (wsRef.current) {
-                wsRef.current.close();
-            }
-
             const ws = new WebSocket(node.url);
-            wsRef.current = ws;
+            websockets.push(ws);
 
             const timeout = setTimeout(() => {
-                if (ws.readyState !== WebSocket.OPEN) {
-                    console.log(`[AutoConnect] ${node.name} timed out, trying next...`);
+                if (!hasConnectedRef.current && ws.readyState !== WebSocket.OPEN) {
+                    console.log(`[AutoConnect] ${node.name} timed out`);
+                    ws.onopen = null;
+                    ws.onerror = null;
                     ws.close();
-                    tryConnect(nodeIndex + 1);
                 }
-            }, 3000); // 3 second timeout per node
+            }, 1500); // 1.5 second timeout per node
+            timeouts.push(timeout);
 
             ws.onopen = () => {
                 clearTimeout(timeout);
-                console.log(`[AutoConnect] Connected to ${node.name}!`);
-                setConnectedNodeIndex(nodeIndex);
-                setStoredNodeIndex(nodeIndex);
-                setIsConnecting(false);
-                setConnectionFailed(false);
-                onConnected?.(nodeIndex, node.name);
-                ws.close(); // Close test connection, actual hook will reconnect
+                handleSuccess(nodeIndex, ws);
             };
 
             ws.onerror = () => {
                 clearTimeout(timeout);
-                console.log(`[AutoConnect] ${node.name} failed, trying next...`);
-                tryConnect(nodeIndex + 1);
+                console.log(`[AutoConnect] ${node.name} failed`);
+            };
+        };
+
+        // Try stored node first (if available), then try all nodes in parallel
+        const storedIndex = getStoredNodeIndex();
+
+        if (storedIndex !== null) {
+            // Try stored node first with a short timeout
+            const storedNode = nodes[storedIndex];
+            console.log(`[AutoConnect] Trying stored node ${storedNode.name} first...`);
+
+            const ws = new WebSocket(storedNode.url);
+            websockets.push(ws);
+
+            const storedTimeout = setTimeout(() => {
+                if (!hasConnectedRef.current) {
+                    console.log(`[AutoConnect] Stored node timed out, trying all nodes...`);
+                    ws.onopen = null;
+                    ws.onerror = null;
+                    ws.close();
+                    // Try all nodes in parallel
+                    nodes.forEach((_, index) => tryConnect(index));
+
+                    // Set a final timeout to detect all failures
+                    const finalTimeout = setTimeout(() => {
+                        if (!hasConnectedRef.current) {
+                            console.error("[AutoConnect] All nodes failed to connect");
+                            cleanup();
+                            isConnectingRef.current = false;
+                            setIsConnecting(false);
+                            setConnectionFailed(true);
+                            callbacksRef.current.onConnectionFailed?.();
+                        }
+                    }, 2000);
+                    timeouts.push(finalTimeout);
+                }
+            }, 1000); // 1 second for stored node
+            timeouts.push(storedTimeout);
+
+            ws.onopen = () => {
+                clearTimeout(storedTimeout);
+                handleSuccess(storedIndex, ws);
             };
 
-            ws.onclose = (event) => {
-                // Only try next if we haven't connected yet
-                if (connectedNodeIndex === null && !event.wasClean) {
-                    clearTimeout(timeout);
+            ws.onerror = () => {
+                clearTimeout(storedTimeout);
+                if (!hasConnectedRef.current) {
+                    console.log(`[AutoConnect] Stored node failed, trying all nodes...`);
+                    // Try all nodes in parallel
+                    nodes.forEach((_, index) => tryConnect(index));
+
+                    // Set a final timeout to detect all failures
+                    const finalTimeout = setTimeout(() => {
+                        if (!hasConnectedRef.current) {
+                            console.error("[AutoConnect] All nodes failed to connect");
+                            cleanup();
+                            isConnectingRef.current = false;
+                            setIsConnecting(false);
+                            setConnectionFailed(true);
+                            callbacksRef.current.onConnectionFailed?.();
+                        }
+                    }, 2000);
+                    timeouts.push(finalTimeout);
                 }
             };
-        },
-        [nodes, connectedNodeIndex, onConnected, onConnectionFailed]
-    );
+        } else {
+            // No stored node, try all nodes in parallel for fastest connection
+            console.log(`[AutoConnect] No stored node, trying all nodes in parallel...`);
+            nodes.forEach((_, index) => tryConnect(index));
 
-    // Start connection attempts
-    useEffect(() => {
-        if (attemptCount === 0 || connectionFailed) return;
-
-        attemptsRef.current.clear();
-        setIsConnecting(true);
-        setConnectionFailed(false);
-        setConnectedNodeIndex(null);
-
-        // Shuffle nodes for load balancing
-        const startIndex = Math.floor(Math.random() * nodes.length);
-        tryConnect(startIndex);
-
-        return () => {
-            if (wsRef.current) {
-                wsRef.current.close();
-            }
-        };
-    }, [attemptCount]);
-
-    // Initial connection
-    useEffect(() => {
-        // Shuffle nodes for load balancing
-        const startIndex = Math.floor(Math.random() * nodes.length);
-        tryConnect(startIndex);
+            // Set a final timeout to detect all failures
+            const finalTimeout = setTimeout(() => {
+                if (!hasConnectedRef.current) {
+                    console.error("[AutoConnect] All nodes failed to connect");
+                    cleanup();
+                    isConnectingRef.current = false;
+                    setIsConnecting(false);
+                    setConnectionFailed(true);
+                    callbacksRef.current.onConnectionFailed?.();
+                }
+            }, 2000);
+            timeouts.push(finalTimeout);
+        }
 
         return () => {
-            if (wsRef.current) {
-                wsRef.current.close();
-            }
+            isConnectingRef.current = false;
+            cleanup();
         };
-    }, []);
+    }, [nodes, retryTrigger]);
 
     const retry = useCallback(() => {
-        setAttemptCount((c) => c + 1);
-        setIsConnecting(true);
-        setConnectionFailed(false);
-        const startIndex = Math.floor(Math.random() * nodes.length);
-        tryConnect(startIndex);
-    }, [nodes, tryConnect]);
+        hasConnectedRef.current = false;
+        isConnectingRef.current = false;
+        setConnectedNodeIndex(null);
+        setRetryTrigger((t) => t + 1);
+    }, []);
 
     return {
         connectedNodeIndex,
