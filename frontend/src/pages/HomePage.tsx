@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useWebSocket } from "../hooks";
 import { useNodeStatus } from "../context";
 import { RoomState } from "../types";
+import { Features } from "../components/Features";
 
 interface HomePageProps {
     userId: string;
@@ -185,27 +186,7 @@ export function HomePage({ userId, username, nodeUrl, connectionFailed, onRetry 
                     </div>
                 </div>
 
-                {/* Features Section */}
-                <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
-                    <h3 className="text-lg font-semibold text-white mb-4 text-center">Features</h3>
-                    <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-zinc-400">
-                        <li className="flex items-center gap-2">
-                            <span>🎥</span> Synchronized YouTube playback
-                        </li>
-                        <li className="flex items-center gap-2">
-                            <span>💬</span> Real-time chat
-                        </li>
-                        <li className="flex items-center gap-2">
-                            <span>📝</span> Shared playlist
-                        </li>
-                        <li className="flex items-center gap-2">
-                            <span>👥</span> See who's watching
-                        </li>
-                        <li className="flex items-center gap-2 sm:col-span-2 justify-center">
-                            <span>⚡</span> Fault-tolerant distributed backend
-                        </li>
-                    </ul>
-                </div>
+                <Features />
             </div>
         </div>
     );
