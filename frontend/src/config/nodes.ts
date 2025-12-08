@@ -1,11 +1,14 @@
 /**
  * Backend node configuration.
  *
- * Requires VITE_NODES environment variable:
- *   VITE_NODES=ws://localhost:8741/ws,ws://localhost:8742/ws,ws://localhost:8743/ws
+ * Requires VITE_NODES environment variable.
+ *
+ * Format: name:url or just url (name will be auto-generated)
+ *   VITE_NODES=Node A:ws://localhost:8741/ws,Node B:ws://localhost:8742/ws
+ *   VITE_NODES=ws://localhost:8741/ws,ws://localhost:8742/ws
  *
  * For production:
- *   VITE_NODES=ws://server1.example.com:8741/ws,ws://server2.example.com:8741/ws
+ *   VITE_NODES=Server 1:ws://server1.example.com:8741/ws,Server 2:ws://server2.example.com:8741/ws
  */
 
 export interface BackendNode {
@@ -15,7 +18,7 @@ export interface BackendNode {
 
 /**
  * Parse nodes from VITE_NODES environment variable.
- * Format: comma-separated WebSocket URLs
+ * Format: name:url,name:url,... or url,url,...
  */
 export function getBackendNodes(): BackendNode[] {
     const nodesEnv = import.meta.env.VITE_NODES;
@@ -23,20 +26,34 @@ export function getBackendNodes(): BackendNode[] {
     if (!nodesEnv) {
         throw new Error(
             "VITE_NODES environment variable is required.\n" +
-                "Format: comma-separated WebSocket URLs\n" +
-                "Example: VITE_NODES=ws://localhost:8741/ws,ws://localhost:8742/ws,ws://localhost:8743/ws"
+                "Format: name:url,name:url,... or just url,url,...\n" +
+                "Example: VITE_NODES=Node A:ws://localhost:8741/ws,Node B:ws://localhost:8742/ws"
         );
     }
 
-    const urls = nodesEnv
+    const nodeStrings = nodesEnv
         .split(",")
-        .map((url: string) => url.trim())
+        .map((s: string) => s.trim())
         .filter(Boolean);
 
-    return urls.map((url: string, index: number) => ({
-        name: `Node ${String.fromCharCode(65 + index)}`, // A, B, C, D...
-        url
-    }));
+    return nodeStrings.map((nodeStr: string, index: number) => {
+        // Check if format is name:ws:// or name:wss://
+        const wsMatch = nodeStr.match(/^(.+?):(wss?:\/\/.+)$/);
+
+        if (wsMatch) {
+            // Has a name prefix
+            return {
+                name: wsMatch[1]!,
+                url: wsMatch[2]!
+            };
+        } else {
+            // Just a URL, generate name
+            return {
+                name: `Node ${String.fromCharCode(65 + index)}`, // A, B, C, D...
+                url: nodeStr
+            };
+        }
+    });
 }
 
 /**

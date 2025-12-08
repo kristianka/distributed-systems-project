@@ -1,14 +1,17 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useWebSocket } from "../hooks";
+import { useNodeStatus } from "../context";
 import { RoomState } from "../types";
 
 interface HomePageProps {
     userId: string;
     nodeUrl: string;
+    connectionFailed?: boolean;
+    onRetry?: () => void;
 }
 
-export function HomePage({ userId, nodeUrl }: HomePageProps) {
+export function HomePage({ userId, nodeUrl, connectionFailed, onRetry }: HomePageProps) {
     const navigate = useNavigate();
     const [joinCode, setJoinCode] = useState("");
     const [error, setError] = useState<string | null>(null);
@@ -34,12 +37,15 @@ export function HomePage({ userId, nodeUrl }: HomePageProps) {
         setIsJoining(false);
     };
 
+    const { onConnectionLost } = useNodeStatus();
+
     const { isConnected, createRoom, joinRoom } = useWebSocket({
         url: nodeUrl,
         userId,
         onRoomCreated: handleRoomCreated,
         onRoomJoined: handleRoomJoined,
-        onError: handleError
+        onError: handleError,
+        onConnectionLost
     });
 
     const handleCreateRoom = () => {
@@ -78,7 +84,11 @@ export function HomePage({ userId, nodeUrl }: HomePageProps) {
                     </p>
 
                     <div className="mt-4">
-                        {isConnected ? (
+                        {connectionFailed ? (
+                            <span className="text-red-400 text-sm bg-red-400/10 px-3 py-1 rounded-full">
+                                ● Disconnected
+                            </span>
+                        ) : isConnected ? (
                             <span className="text-emerald-400 text-sm bg-emerald-400/10 px-3 py-1 rounded-full">
                                 ● Connected
                             </span>
@@ -89,6 +99,31 @@ export function HomePage({ userId, nodeUrl }: HomePageProps) {
                         )}
                     </div>
                 </div>
+
+                {/* Connection Failed Banner */}
+                {connectionFailed && (
+                    <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4 mb-6">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <span className="text-red-400 text-xl">⚠️</span>
+                                <div>
+                                    <p className="text-red-400 font-medium">Connection Failed</p>
+                                    <p className="text-red-400/70 text-sm">
+                                        Could not connect to any server
+                                    </p>
+                                </div>
+                            </div>
+                            {onRetry && (
+                                <button
+                                    onClick={onRetry}
+                                    className="bg-red-500/20 hover:bg-red-500/30 text-red-400 font-medium py-2 px-4 rounded-lg transition-colors text-sm"
+                                >
+                                    Retry
+                                </button>
+                            )}
+                        </div>
+                    </div>
+                )}
 
                 {/* Error Message */}
                 {error && (

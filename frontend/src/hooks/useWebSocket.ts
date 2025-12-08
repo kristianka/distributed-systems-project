@@ -19,6 +19,8 @@ interface UseWebSocketOptions {
     onError?: (error: string) => void;
     onConnected?: () => void;
     onDisconnected?: () => void;
+    /** Called when connection is lost - use for triggering node failover */
+    onConnectionLost?: () => void;
 }
 
 interface UseWebSocketReturn {
@@ -43,12 +45,14 @@ export function useWebSocket(options: UseWebSocketOptions): UseWebSocketReturn {
         onRoomStateUpdate,
         onError,
         onConnected,
-        onDisconnected
+        onDisconnected,
+        onConnectionLost
     } = options;
 
     const [isConnected, setIsConnected] = useState(false);
     const wsRef = useRef<WebSocket | null>(null);
     const reconnectTimeoutRef = useRef<number | null>(null);
+    const hasEverConnectedRef = useRef(false);
 
     // Store callbacks in refs to avoid reconnection on callback changes
     const callbacksRef = useRef({
@@ -57,7 +61,8 @@ export function useWebSocket(options: UseWebSocketOptions): UseWebSocketReturn {
         onRoomStateUpdate,
         onError,
         onConnected,
-        onDisconnected
+        onDisconnected,
+        onConnectionLost
     });
 
     // Update refs when callbacks change
@@ -68,9 +73,18 @@ export function useWebSocket(options: UseWebSocketOptions): UseWebSocketReturn {
             onRoomStateUpdate,
             onError,
             onConnected,
-            onDisconnected
+            onDisconnected,
+            onConnectionLost
         };
-    }, [onRoomCreated, onRoomJoined, onRoomStateUpdate, onError, onConnected, onDisconnected]);
+    }, [
+        onRoomCreated,
+        onRoomJoined,
+        onRoomStateUpdate,
+        onError,
+        onConnected,
+        onDisconnected,
+        onConnectionLost
+    ]);
 
     const handleMessage = useCallback((message: ServerMessage) => {
         console.log("[WebSocket] Received:", message.type);
@@ -121,6 +135,12 @@ export function useWebSocket(options: UseWebSocketOptions): UseWebSocketReturn {
     useEffect(() => {
         let isMounted = true;
 
+        // Don't try to connect if URL is empty or invalid
+        if (!url || !url.startsWith("ws")) {
+            console.log("[WebSocket] No valid URL provided, waiting...");
+            return;
+        }
+
         // Clean up any existing connection
         if (reconnectTimeoutRef.current) {
             clearTimeout(reconnectTimeoutRef.current);
@@ -151,6 +171,7 @@ export function useWebSocket(options: UseWebSocketOptions): UseWebSocketReturn {
                 if (!isMounted) return;
                 console.log("[WebSocket] Connected");
                 setIsConnected(true);
+                hasEverConnectedRef.current = true;
                 callbacksRef.current.onConnected?.();
             };
 
@@ -160,11 +181,15 @@ export function useWebSocket(options: UseWebSocketOptions): UseWebSocketReturn {
                 setIsConnected(false);
                 callbacksRef.current.onDisconnected?.();
 
-                // Attempt to reconnect after 3 seconds
-                reconnectTimeoutRef.current = window.setTimeout(() => {
-                    console.log("[WebSocket] Attempting to reconnect...");
-                    connect();
-                }, 3000);
+                // If we had a connection and lost it, trigger failover to find another node
+                if (hasEverConnectedRef.current) {
+                    console.log("[WebSocket] Connection lost, triggering failover...");
+                    hasEverConnectedRef.current = false;
+                    // Small delay before failover to avoid rapid retries
+                    reconnectTimeoutRef.current = window.setTimeout(() => {
+                        callbacksRef.current.onConnectionLost?.();
+                    }, 500);
+                }
             };
 
             ws.onerror = (error) => {
