@@ -73,10 +73,12 @@ export const getPeerConfigs = (nodeId: string): NodeConfig[] => {
 };
 
 /**
- * Parse node configuration from environment variables or command line
+ * Parse node configuration from environment variables or command line.
+ * Command line argument takes priority over NODE_ID env var.
  */
 export const parseNodeConfigFromEnv = () => {
-    const nodeId = process.env.NODE_ID ?? Bun.argv[2] ?? "node-a";
+    // Command line arg takes priority, then env var, then default
+    const nodeId = Bun.argv[2] ?? process.env.NODE_ID ?? "node-a";
 
     const config = getNodeConfig(nodeId);
     if (!config) {

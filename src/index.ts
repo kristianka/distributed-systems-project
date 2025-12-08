@@ -1,6 +1,6 @@
 import { BackendNode } from "./node";
 import { parseNodeConfigFromEnv } from "./config";
-import { logger } from "./utils";
+import { logger, setLoggerNodeId } from "./utils";
 
 /**
  * Main entry point for starting a backend node.
@@ -14,16 +14,19 @@ import { logger } from "./utils";
  *   NODE_ID=node-a bun run src/index.ts
  */
 
+// Parse configuration first
+const { nodeId, config, peers } = parseNodeConfigFromEnv();
+
+// Set logger prefix
+setLoggerNodeId(nodeId);
+
 logger.log("===========================================");
 logger.log("  Distributed YouTube Watch-Together System");
 logger.log("===========================================");
 
-// Parse configuration
-const { nodeId, config, peers } = parseNodeConfigFromEnv();
-
 logger.log(`Starting node: ${nodeId}`);
 logger.log(`Configuration:`, config);
-logger.log(`Peers:`, peers.map((p) => p.nodeId).join(", "));
+logger.log(`Peers: ${peers.map((p) => p.nodeId).join(", ") || "none"}`);
 logger.log("");
 
 // Create and start the backend node
