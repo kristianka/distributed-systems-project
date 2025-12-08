@@ -13,10 +13,10 @@ import {
 import { logger } from "../utils";
 
 // Raft timing configuration
-// Increase these values when running across VMs/containers
-const ELECTION_TIMEOUT_MIN = 150; // ms
-const ELECTION_TIMEOUT_MAX = 300; // ms
-const HEARTBEAT_INTERVAL = 50; // ms
+// Tuned for real-time playback sync (responsive but not excessive)
+const ELECTION_TIMEOUT_MIN = 300; // ms
+const ELECTION_TIMEOUT_MAX = 500; // ms
+const HEARTBEAT_INTERVAL = 100; // ms
 
 /**
  * Simplified Raft consensus implementation for a single room.
