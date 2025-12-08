@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { ChatMessage } from "../types";
+import { getDisplayName, formatTime } from "../utils";
 
 interface ChatProps {
     messages: ChatMessage[];
@@ -24,17 +25,6 @@ export function Chat({ messages, currentUserId, onSendMessage }: ChatProps) {
         }
     };
 
-    const formatTime = (timestamp: number) => {
-        return new Date(timestamp).toLocaleTimeString([], {
-            hour: "2-digit",
-            minute: "2-digit"
-        });
-    };
-
-    const getDisplayName = (userId: string) => {
-        return userId.slice(-4);
-    };
-
     return (
         <div className="flex flex-col h-full">
             {/* Header */}
@@ -54,7 +44,7 @@ export function Chat({ messages, currentUserId, onSendMessage }: ChatProps) {
                     messages.map((msg) => (
                         <div
                             key={msg.id}
-                            className={`max-w-[85%] p-2.5 rounded-xl break-words ${
+                            className={`max-w-[85%] p-2.5 rounded-xl wrap-break-word ${
                                 msg.userId === currentUserId
                                     ? "ml-auto bg-blue-600 text-white rounded-br-sm"
                                     : "mr-auto bg-zinc-800 text-white rounded-bl-sm"

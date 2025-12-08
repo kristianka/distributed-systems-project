@@ -1,4 +1,5 @@
 import { PlaylistVideo } from "../types";
+import { getDisplayName } from "../utils";
 
 interface PlaylistProps {
     videos: PlaylistVideo[];
@@ -8,10 +9,6 @@ interface PlaylistProps {
 }
 
 export function Playlist({ videos, currentVideoId, onPlayVideo, onRemoveVideo }: PlaylistProps) {
-    const getDisplayName = (userId: string) => {
-        return userId.slice(-4);
-    };
-
     return (
         <div className="flex flex-col h-full">
             {/* Header */}

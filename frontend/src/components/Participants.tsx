@@ -1,4 +1,5 @@
 import { Participant } from "../types";
+import { getDisplayName, formatTime } from "../utils";
 
 interface ParticipantsProps {
     participants: Participant[];
@@ -6,17 +7,6 @@ interface ParticipantsProps {
 }
 
 export function Participants({ participants, currentUserId }: ParticipantsProps) {
-    const getDisplayName = (userId: string) => {
-        return userId.slice(-4);
-    };
-
-    const formatJoinTime = (timestamp: number) => {
-        return new Date(timestamp).toLocaleTimeString([], {
-            hour: "2-digit",
-            minute: "2-digit"
-        });
-    };
-
     return (
         <div className="flex flex-col">
             {/* Header */}
@@ -53,7 +43,7 @@ export function Participants({ participants, currentUserId }: ParticipantsProps)
                                     )}
                                 </span>
                                 <span className="text-xs text-zinc-500 block">
-                                    Joined at {formatJoinTime(participant.joinedAt)}
+                                    Joined at {formatTime(participant.joinedAt)}
                                 </span>
                             </div>
 
