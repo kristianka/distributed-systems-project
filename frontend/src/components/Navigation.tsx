@@ -33,7 +33,9 @@ export const Navigation = ({ username, setUsername }: NavigationProps) => {
 
     return (
         <header className="flex justify-between items-center px-6 py-4 bg-zinc-900 border-b border-zinc-800">
-            <h1 className="text-2xl font-bold">🎬 Watch Together</h1>
+            <a href="/">
+                <h1 className="text-2xl font-bold">🎬 Watch Together</h1>
+            </a>
             <div className="flex items-center gap-4">
                 <NodeStatusTooltip />
                 {connectedNodeName ? (
