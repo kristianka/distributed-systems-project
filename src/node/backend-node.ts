@@ -85,7 +85,9 @@ export class BackendNode {
 
         // Wait for peers to become available (retries indefinitely)
         // This runs in background so node is still operational
-        this.rpcClient.waitForPeers(0, 3000);
+        this.rpcClient.waitForPeers(0, 3000).catch((err) => {
+            logger.error(`[Node ${this.nodeId}] Error waiting for peers:`, err);
+        });
     }
 
     /**
