@@ -9,18 +9,7 @@ import { Participants } from "../components/Participants";
 
 interface RoomPageProps {
     userId: string;
-}
-
-// Get WebSocket URL based on environment
-function getWebSocketUrl(): string {
-    const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-    const host = window.location.hostname;
-
-    if (host === "localhost" || host === "127.0.0.1") {
-        return "ws://localhost:3001/ws";
-    }
-
-    return `${protocol}//${host}/ws`;
+    nodeUrl: string;
 }
 
 // Extract YouTube video ID from various URL formats
@@ -48,7 +37,7 @@ function extractVideoId(input: string): string | null {
     return null;
 }
 
-export function RoomPage({ userId }: RoomPageProps) {
+export function RoomPage({ userId, nodeUrl }: RoomPageProps) {
     const { roomCode } = useParams<{ roomCode: string }>();
     const navigate = useNavigate();
 
@@ -139,7 +128,7 @@ export function RoomPage({ userId }: RoomPageProps) {
         removeFromPlaylist,
         sendChatMessage
     } = useWebSocket({
-        url: getWebSocketUrl(),
+        url: nodeUrl,
         userId,
         onRoomJoined: handleRoomJoined,
         onRoomStateUpdate: handleRoomStateUpdate,
