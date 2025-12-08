@@ -39,9 +39,9 @@ export const Features = () => {
                 {features.map((feature, index) => (
                     <div
                         key={index}
-                        className="group relative bg-zinc-800/50 hover:bg-zinc-800 border border-zinc-700/50 hover:border-zinc-600 rounded-xl p-4 transition-all duration-200 hover:scale-[1.02] hover:shadow-lg hover:shadow-black/20"
+                        className="group relative bg-zinc-800/50 hover:bg-zinc-800 border border-zinc-700/50 hover:border-zinc-600 rounded-xl p-4 transition-all duration-200 hover:scale-[1.02] hover:shadow-lg hover:shadow-black/20 text-center"
                     >
-                        <div className="text-2xl mb-2 group-hover:scale-110 transition-transform duration-200">
+                        <div className="text-2xl mb-2 group-hover:scale-110 transition-transform duration-200 flex items-center justify-center">
                             {feature.icon}
                         </div>
                         <h4 className="text-sm font-semibold text-white mb-1">{feature.title}</h4>

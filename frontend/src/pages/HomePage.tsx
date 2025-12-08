@@ -4,6 +4,7 @@ import { useWebSocket } from "../hooks";
 import { useNodeStatus } from "../context";
 import { RoomState } from "../types";
 import { Features } from "../components/Features";
+import { Footer } from "../components/Footer";
 
 interface HomePageProps {
     userId: string;
@@ -187,6 +188,7 @@ export function HomePage({ userId, username, nodeUrl, connectionFailed, onRetry 
                 </div>
 
                 <Features />
+                <Footer />
             </div>
         </div>
     );
