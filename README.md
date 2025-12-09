@@ -86,34 +86,38 @@ VITE_NODES=ws://localhost:8741/ws,ws://localhost:8742/ws,ws://localhost:8743/ws,
 
 ## Running the System
 
-### Development (backend + frontend)
-
-```bash
-bun run dev
-```
-
-This starts all backend nodes and the frontend dev server concurrently.
-
 ### Start nodes individually
 
-Each node needs its own `NODE_ID` environment variable:
+Each node requires the `CLUSTER_NODES` environment variable and its own `NODE_ID`:
 
 ```bash
-# In separate terminals:
+# In separate terminals (PowerShell):
+$env:CLUSTER_NODES="node-a:localhost:8741:9741,node-b:localhost:8742:9742,node-c:localhost:8743:9743"
+
+$env:NODE_ID="node-a"; bun run src/index.ts
+$env:NODE_ID="node-b"; bun run src/index.ts
+$env:NODE_ID="node-c"; bun run src/index.ts
+```
+
+Or on Linux/macOS:
+
+```bash
+export CLUSTER_NODES="node-a:localhost:8741:9741,node-b:localhost:8742:9742,node-c:localhost:8743:9743"
+
 NODE_ID=node-a bun run src/index.ts
 NODE_ID=node-b bun run src/index.ts
 NODE_ID=node-c bun run src/index.ts
 ```
 
-Or use the npm scripts (these use command line args instead):
+Alternatively, use a `.env` file and pass the node ID as a command line argument:
 
 ```bash
-bun run node-a
-bun run node-b
-bun run node-c
+bun run src/index.ts node-a
+bun run src/index.ts node-b
+bun run src/index.ts node-c
 ```
 
-### Start frontend only
+### Start frontend
 
 ```bash
 bun run frontend:dev
