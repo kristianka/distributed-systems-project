@@ -46,7 +46,7 @@ export function Chat({ messages, currentUserId, onSendMessage }: ChatProps) {
                             key={msg.id}
                             className={`max-w-[85%] p-2.5 rounded-xl wrap-break-word ${
                                 msg.userId === currentUserId
-                                    ? "ml-auto bg-blue-600 text-white rounded-br-sm"
+                                    ? "ml-auto bg-violet-600 text-white rounded-br-sm"
                                     : "mr-auto bg-zinc-800 text-white rounded-bl-sm"
                             }`}
                         >
@@ -75,12 +75,12 @@ export function Chat({ messages, currentUserId, onSendMessage }: ChatProps) {
                     onChange={(e) => setInput(e.target.value)}
                     placeholder="Type a message..."
                     maxLength={500}
-                    className="flex-1 bg-zinc-800 border border-zinc-700 focus:border-blue-500 text-white py-2 px-3 rounded-full text-sm outline-none transition-colors placeholder:text-zinc-500"
+                    className="flex-1 bg-zinc-800 border border-zinc-700 focus:border-violet-500 text-white py-2 px-3 rounded-full text-sm outline-none transition-colors placeholder:text-zinc-500"
                 />
                 <button
                     type="submit"
                     disabled={!input.trim()}
-                    className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium py-2 px-4 rounded-full text-sm transition-colors"
+                    className="bg-violet-500 hover:bg-violet-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium py-2 px-4 rounded-full text-sm transition-colors"
                 >
                     Send
                 </button>

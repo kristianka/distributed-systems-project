@@ -26,7 +26,7 @@ export function Participants({ participants, currentUserId }: ParticipantsProps)
                         <div
                             key={participant.userId}
                             className={`flex items-center gap-2 p-2 rounded-lg transition-colors hover:bg-zinc-800 ${
-                                participant.userId === currentUserId ? "bg-blue-600/10" : ""
+                                participant.userId === currentUserId ? "bg-violet-600/10" : ""
                             }`}
                         >
                             {/* Avatar */}

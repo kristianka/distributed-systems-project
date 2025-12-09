@@ -32,7 +32,7 @@ export function Playlist({ videos, currentVideoId, onPlayVideo, onRemoveVideo }:
                             key={`${video.videoId}-${index}`}
                             className={`flex items-center gap-2 p-2 rounded-lg transition-colors hover:bg-zinc-800 ${
                                 video.videoId === currentVideoId
-                                    ? "bg-blue-600/20 border border-blue-500"
+                                    ? "bg-violet-600/20 border border-violet-500"
                                     : ""
                             }`}
                         >

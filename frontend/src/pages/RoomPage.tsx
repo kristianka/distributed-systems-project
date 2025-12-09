@@ -268,7 +268,7 @@ export function RoomPage({ userId, username, nodeUrl }: RoomPageProps) {
                     <h2 className="text-xl font-semibold text-white">
                         Room:{" "}
                         <span
-                            className="bg-blue-600 px-2 py-1 rounded cursor-pointer hover:bg-blue-700 transition-colors font-mono"
+                            className="bg-violet-500 px-2 py-1 rounded cursor-pointer hover:bg-violet-600 transition-colors font-mono"
                             onClick={copyRoomCode}
                             title="Click to copy"
                         >
@@ -349,14 +349,14 @@ export function RoomPage({ userId, username, nodeUrl }: RoomPageProps) {
                     <form onSubmit={handleAddVideo} className="flex gap-2">
                         <input
                             type="text"
-                            className="flex-1 bg-zinc-800 border border-zinc-700 focus:border-blue-500 text-white py-3 px-4 rounded-lg outline-none transition-colors placeholder:text-zinc-500"
+                            className="flex-1 bg-zinc-800 border border-zinc-700 focus:border-violet-500 text-white py-3 px-4 rounded-lg outline-none transition-colors placeholder:text-zinc-500"
                             placeholder="Paste YouTube URL or video ID..."
                             value={newVideoUrl}
                             onChange={(e) => setNewVideoUrl(e.target.value)}
                         />
                         <button
                             type="submit"
-                            className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium py-3 px-5 rounded-lg transition-colors whitespace-nowrap"
+                            className="bg-violet-500 hover:bg-violet-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium py-3 px-5 rounded-lg transition-colors whitespace-nowrap"
                             disabled={!newVideoUrl.trim()}
                         >
                             Add Video

@@ -73,8 +73,6 @@ export function HomePage({ userId, username, nodeUrl, connectionFailed, onRetry 
         joinRoom(joinCode.toUpperCase());
     };
 
-    // todo favicon
-
     return (
         <div className="flex justify-center items-center min-h-full mt-8">
             <div className="max-w-xl w-full">
@@ -145,7 +143,7 @@ export function HomePage({ userId, username, nodeUrl, connectionFailed, onRetry 
                             Start a new watch party and invite friends
                         </p>
                         <button
-                            className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold py-3 px-6 rounded-lg transition-colors"
+                            className="w-full bg-violet-500 hover:bg-violet-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold py-3 px-6 rounded-lg transition-colors"
                             onClick={handleCreateRoom}
                             disabled={!isConnected || isCreating}
                         >
@@ -169,7 +167,7 @@ export function HomePage({ userId, username, nodeUrl, connectionFailed, onRetry 
                         <form onSubmit={handleJoinRoom} className="space-y-3">
                             <input
                                 type="text"
-                                className="w-full bg-zinc-800 border-2 border-zinc-700 focus:border-blue-500 text-white text-xl text-center tracking-widest uppercase py-3 px-4 rounded-lg outline-none transition-colors placeholder:text-zinc-500 placeholder:tracking-normal placeholder:normal-case"
+                                className="w-full bg-zinc-800 border-2 border-zinc-700 focus:border-violet-500 text-white text-xl text-center tracking-widest uppercase py-3 px-4 rounded-lg outline-none transition-colors placeholder:text-zinc-500 placeholder:tracking-normal placeholder:normal-case"
                                 placeholder="Enter room code"
                                 value={joinCode}
                                 onChange={(e) => setJoinCode(e.target.value.toUpperCase())}

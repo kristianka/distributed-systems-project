@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { NodeStatusTooltip } from "./NodeStatusTooltip";
 import { useNodeStatus } from "../context/NodeStatusContext";
-import { Pencil } from "lucide-react";
+import { Clapperboard, Pencil } from "lucide-react";
 import { Sheet } from "./ui/sheet";
 import { SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "./ui/sheet";
 import { getStatusIcon, getStatusText, getStatusClass } from "../utils/nodeStatus";
@@ -77,7 +77,7 @@ export const Navigation = ({ username, setUsername }: NavigationProps) => {
                     onBlur={handleUsernameSubmit}
                     maxLength={20}
                     autoFocus
-                    className="text-sm bg-zinc-800 border border-blue-500 text-white px-3 py-1.5 rounded-full outline-none w-32"
+                    className="text-sm bg-zinc-800 border border-violet-500 text-white px-3 py-1.5 rounded-full outline-none w-32"
                 />
             </div>
         ) : (
@@ -96,8 +96,9 @@ export const Navigation = ({ username, setUsername }: NavigationProps) => {
 
     return (
         <header className="flex justify-between items-center px-4 sm:px-6 py-4 bg-zinc-900 border-b border-zinc-800">
-            <a href="/">
-                <h1 className="text-xl sm:text-2xl font-bold">🎬 Watch Together</h1>
+            <a href="/" className="flex items-center justify-center">
+                <Clapperboard className="inline w-6 h-6 mr-4 text-violet-500" />
+                <h1 className="text-xl sm:text-2xl font-bold">Watch Together</h1>
             </a>
 
             {/* Desktop navigation */}
