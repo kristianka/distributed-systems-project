@@ -5,7 +5,7 @@ export const Footer = () => {
         <footer className="mt-8 pt-6 border-t border-zinc-800 text-center">
             <p className="text-zinc-500 text-sm">
                 <a
-                    href="https://kristiankahkonen.com"
+                    href="https://kristiankahkonen.com?utm_source=watch-together-footer"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center text-zinc-400 hover:text-white transition-colors mr-4"
