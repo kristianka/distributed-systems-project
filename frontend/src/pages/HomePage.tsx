@@ -76,7 +76,7 @@ export function HomePage({ userId, username, nodeUrl, connectionFailed, onRetry 
     // todo favicon
 
     return (
-        <div className="flex justify-center items-center min-h-full p-8">
+        <div className="flex justify-center items-center min-h-full mt-8">
             <div className="max-w-xl w-full">
                 {/* Welcome Section */}
                 <div className="text-center mb-8">

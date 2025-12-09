@@ -28,7 +28,7 @@ function AppContent() {
     return (
         <div className="flex flex-col h-screen bg-zinc-950 text-white">
             <Navigation username={username} setUsername={setUsername} />
-            <main className="flex-1 overflow-auto p-4">
+            <main className="flex-1 overflow-auto p-5">
                 <Routes>
                     <Route
                         path="/"
