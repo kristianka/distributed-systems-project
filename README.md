@@ -33,7 +33,7 @@ Each room has:
 bun install
 
 # Install frontend dependencies
-cd frontend && npm install
+cd frontend && bun install
 ```
 
 ## Configuration
@@ -94,12 +94,6 @@ bun run dev
 
 This starts all backend nodes and the frontend dev server concurrently.
 
-### Start backend nodes only
-
-```bash
-bun run start-all
-```
-
 ### Start nodes individually
 
 Each node needs its own `NODE_ID` environment variable:
@@ -123,50 +117,6 @@ bun run node-c
 
 ```bash
 bun run frontend:dev
-```
-
-### Run the test client
-
-```bash
-bun run test-client
-```
-
-The test client will:
-
-1. Connect to Node A
-2. Set a user ID
-3. Create a new room
-4. Add a video to playlist
-5. Start playback
-6. Send a chat message
-7. Seek and pause
-
-## Project Structure
-
-```
-src/
-├── index.ts              # Main entry point
-├── test-client.ts        # Test client for verification
-├── types/                # TypeScript type definitions
-│   ├── index.ts
-│   ├── messages.ts       # Message types (Room & Raft)
-│   ├── room.ts           # Room state types
-│   └── node.ts           # Node configuration types
-├── consensus/            # Raft consensus implementation
-│   ├── index.ts
-│   └── raft.ts           # Simplified Raft algorithm
-├── room/                 # Room state management
-│   ├── index.ts
-│   └── room-state.ts     # Room state manager
-├── rpc/                  # Inter-node communication
-│   ├── index.ts
-│   └── rpc.ts            # RPC client & server
-├── node/                 # Backend node implementation
-│   ├── index.ts
-│   └── backend-node.ts   # Main backend node
-└── config/               # Configuration
-    ├── index.ts
-    └── cluster.ts        # Cluster configuration
 ```
 
 ## Client WebSocket API
