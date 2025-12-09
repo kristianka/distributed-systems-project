@@ -29,11 +29,13 @@ export enum ClientMessageType {
 export interface RoomCreatePayload {
     roomCode?: string; // Optional: only set when broadcasting to other nodes
     userId: string;
+    username: string;
 }
 
 export interface RoomJoinPayload {
     roomCode: string;
     userId: string;
+    username: string;
 }
 
 export interface RoomLeavePayload {
@@ -73,6 +75,7 @@ export interface PlaylistRemovePayload {
 export interface ChatMessagePayload {
     roomCode: string;
     userId: string;
+    username: string;
     messageText: string;
     timestamp: number;
 }
@@ -137,6 +140,7 @@ export interface PlaylistVideo {
 export interface ChatMessage {
     id: string;
     userId: string;
+    username: string;
     messageText: string;
     timestamp: number;
 }
@@ -152,6 +156,7 @@ export interface PlaybackState {
 // Participant in a room
 export interface Participant {
     userId: string;
+    username: string;
     joinedAt: number;
     isCreator: boolean;
 }

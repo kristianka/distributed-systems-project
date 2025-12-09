@@ -3,15 +3,18 @@ import { useNavigate } from "react-router-dom";
 import { useWebSocket } from "../hooks";
 import { useNodeStatus } from "../context";
 import { RoomState } from "../types";
+import { Features } from "../components/Features";
+import { Footer } from "../components/Footer";
 
 interface HomePageProps {
     userId: string;
+    username: string;
     nodeUrl: string;
     connectionFailed?: boolean;
     onRetry?: () => void;
 }
 
-export function HomePage({ userId, nodeUrl, connectionFailed, onRetry }: HomePageProps) {
+export function HomePage({ userId, username, nodeUrl, connectionFailed, onRetry }: HomePageProps) {
     const navigate = useNavigate();
     const [joinCode, setJoinCode] = useState("");
     const [error, setError] = useState<string | null>(null);
@@ -42,6 +45,7 @@ export function HomePage({ userId, nodeUrl, connectionFailed, onRetry }: HomePag
     const { isConnected, createRoom, joinRoom } = useWebSocket({
         url: nodeUrl,
         userId,
+        username,
         onRoomCreated: handleRoomCreated,
         onRoomJoined: handleRoomJoined,
         onError: handleError,
@@ -69,10 +73,8 @@ export function HomePage({ userId, nodeUrl, connectionFailed, onRetry }: HomePag
         joinRoom(joinCode.toUpperCase());
     };
 
-    // todo favicon
-
     return (
-        <div className="flex justify-center items-center min-h-full p-8">
+        <div className="flex justify-center items-center min-h-full mt-8">
             <div className="max-w-xl w-full">
                 {/* Welcome Section */}
                 <div className="text-center mb-8">
@@ -141,7 +143,7 @@ export function HomePage({ userId, nodeUrl, connectionFailed, onRetry }: HomePag
                             Start a new watch party and invite friends
                         </p>
                         <button
-                            className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold py-3 px-6 rounded-lg transition-colors"
+                            className="w-full bg-violet-500 hover:bg-violet-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold py-3 px-6 rounded-lg transition-colors"
                             onClick={handleCreateRoom}
                             disabled={!isConnected || isCreating}
                         >
@@ -165,7 +167,7 @@ export function HomePage({ userId, nodeUrl, connectionFailed, onRetry }: HomePag
                         <form onSubmit={handleJoinRoom} className="space-y-3">
                             <input
                                 type="text"
-                                className="w-full bg-zinc-800 border-2 border-zinc-700 focus:border-blue-500 text-white text-xl text-center tracking-widest uppercase py-3 px-4 rounded-lg outline-none transition-colors placeholder:text-zinc-500 placeholder:tracking-normal placeholder:normal-case"
+                                className="w-full bg-zinc-800 border-2 border-zinc-700 focus:border-violet-500 text-white text-xl text-center tracking-widest uppercase py-3 px-4 rounded-lg outline-none transition-colors placeholder:text-zinc-500 placeholder:tracking-normal placeholder:normal-case"
                                 placeholder="Enter room code"
                                 value={joinCode}
                                 onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
@@ -183,27 +185,8 @@ export function HomePage({ userId, nodeUrl, connectionFailed, onRetry }: HomePag
                     </div>
                 </div>
 
-                {/* Features Section */}
-                <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
-                    <h3 className="text-lg font-semibold text-white mb-4 text-center">Features</h3>
-                    <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-zinc-400">
-                        <li className="flex items-center gap-2">
-                            <span>🎥</span> Synchronized YouTube playback
-                        </li>
-                        <li className="flex items-center gap-2">
-                            <span>💬</span> Real-time chat
-                        </li>
-                        <li className="flex items-center gap-2">
-                            <span>📝</span> Shared playlist
-                        </li>
-                        <li className="flex items-center gap-2">
-                            <span>👥</span> See who's watching
-                        </li>
-                        <li className="flex items-center gap-2 sm:col-span-2 justify-center">
-                            <span>⚡</span> Fault-tolerant distributed backend
-                        </li>
-                    </ul>
-                </div>
+                <Features />
+                <Footer />
             </div>
         </div>
     );

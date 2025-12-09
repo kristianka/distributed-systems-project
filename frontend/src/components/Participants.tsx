@@ -1,4 +1,5 @@
 import { Participant } from "../types";
+import { formatTime } from "../utils";
 
 interface ParticipantsProps {
     participants: Participant[];
@@ -6,17 +7,6 @@ interface ParticipantsProps {
 }
 
 export function Participants({ participants, currentUserId }: ParticipantsProps) {
-    const getDisplayName = (userId: string) => {
-        return userId.slice(-4);
-    };
-
-    const formatJoinTime = (timestamp: number) => {
-        return new Date(timestamp).toLocaleTimeString([], {
-            hour: "2-digit",
-            minute: "2-digit"
-        });
-    };
-
     return (
         <div className="flex flex-col">
             {/* Header */}
@@ -36,7 +26,7 @@ export function Participants({ participants, currentUserId }: ParticipantsProps)
                         <div
                             key={participant.userId}
                             className={`flex items-center gap-2 p-2 rounded-lg transition-colors hover:bg-zinc-800 ${
-                                participant.userId === currentUserId ? "bg-blue-600/10" : ""
+                                participant.userId === currentUserId ? "bg-violet-600/10" : ""
                             }`}
                         >
                             {/* Avatar */}
@@ -47,13 +37,13 @@ export function Participants({ participants, currentUserId }: ParticipantsProps)
                             {/* Info */}
                             <div className="flex-1 min-w-0">
                                 <span className="text-sm text-white font-medium">
-                                    {getDisplayName(participant.userId)}
+                                    {participant.username}
                                     {participant.userId === currentUserId && (
                                         <span className="text-zinc-400"> (you)</span>
                                     )}
                                 </span>
                                 <span className="text-xs text-zinc-500 block">
-                                    Joined at {formatJoinTime(participant.joinedAt)}
+                                    Joined at {formatTime(participant.joinedAt)}
                                 </span>
                             </div>
 

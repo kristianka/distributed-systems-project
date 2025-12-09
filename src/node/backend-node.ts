@@ -232,7 +232,11 @@ export class BackendNode {
         if (message.type === RoomMessageType.ROOM_CREATE) {
             const createPayload = message.payload as RoomCreatePayload;
             if (createPayload.roomCode) {
-                this.createRoom(createPayload.roomCode, createPayload.userId);
+                this.createRoom(
+                    createPayload.roomCode,
+                    createPayload.userId,
+                    createPayload.username
+                );
             }
             return { success: true };
         }
@@ -285,7 +289,11 @@ export class BackendNode {
 
             switch (message.type) {
                 case RoomMessageType.ROOM_CREATE:
-                    this.handleCreateRoom(clientId, message.payload.userId as string);
+                    this.handleCreateRoom(
+                        clientId,
+                        message.payload.userId as string,
+                        message.payload.username as string
+                    );
                     break;
 
                 case RoomMessageType.ROOM_JOIN:
@@ -334,7 +342,7 @@ export class BackendNode {
     /**
      * Handle room creation request
      */
-    private handleCreateRoom(clientId: string, userId: string): void {
+    private handleCreateRoom(clientId: string, userId: string, username: string): void {
         const client = this.clients.get(clientId);
         if (!client) {
             return;
@@ -344,7 +352,7 @@ export class BackendNode {
         client.userId = userId;
 
         const roomCode = generateRoomCode();
-        this.createRoom(roomCode, userId);
+        this.createRoom(roomCode, userId, username);
 
         // Join the client to the room
         client.roomCode = roomCode;
@@ -352,7 +360,7 @@ export class BackendNode {
         // Notify other nodes to create the room
         this.broadcastToNodes({
             type: RoomMessageType.ROOM_CREATE,
-            payload: { roomCode, userId }
+            payload: { roomCode, userId, username }
         });
 
         this.sendToClient(clientId, {
@@ -366,14 +374,18 @@ export class BackendNode {
     /**
      * Create a room on this node
      */
-    private createRoom(roomCode: string, creatorId: string): void {
+    private createRoom(
+        roomCode: string,
+        creatorId: string,
+        creatorUsername: string = "Anonymous"
+    ): void {
         if (this.rooms.has(roomCode)) {
             logger.log(`[Node ${this.nodeId}] Room ${roomCode} already exists`);
             return;
         }
 
         // Create room state manager
-        const roomState = new RoomStateManager(roomCode, creatorId, (state) =>
+        const roomState = new RoomStateManager(roomCode, creatorId, creatorUsername, (state) =>
             this.broadcastRoomState(roomCode, state)
         );
         this.rooms.set(roomCode, roomState);

@@ -6,15 +6,9 @@
   "private": true,
   "scripts": {
     "start": "bun run src/index.ts",
-    "node-a": "bun run src/index.ts node-a",
-    "node-b": "bun run src/index.ts node-b",
-    "node-c": "bun run src/index.ts node-c",
-    "start-all": "concurrently --raw \"bun run node-a\" \"bun run node-b\" \"bun run node-c\"",
-    "test-client": "bun run src/test-client.ts",
     "frontend:install": "cd frontend && npm install",
     "frontend:dev": "cd frontend && npm run dev",
-    "frontend:build": "cd frontend && npm run build",
-    "dev": "concurrently --raw \"bun run start-all\" \"bun run frontend:dev\""
+    "frontend:build": "cd frontend && npm run build"
   },
   "devDependencies": {
     "@types/bun": "latest",

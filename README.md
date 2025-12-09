@@ -33,7 +33,7 @@ Each room has:
 bun install
 
 # Install frontend dependencies
-cd frontend && npm install
+cd frontend && bun install
 ```
 
 ## Configuration
@@ -86,87 +86,41 @@ VITE_NODES=ws://localhost:8741/ws,ws://localhost:8742/ws,ws://localhost:8743/ws,
 
 ## Running the System
 
-### Development (backend + frontend)
-
-```bash
-bun run dev
-```
-
-This starts all backend nodes and the frontend dev server concurrently.
-
-### Start backend nodes only
-
-```bash
-bun run start-all
-```
-
 ### Start nodes individually
 
-Each node needs its own `NODE_ID` environment variable:
+Each node requires the `CLUSTER_NODES` environment variable and its own `NODE_ID`:
 
 ```bash
-# In separate terminals:
+# In separate terminals (PowerShell):
+$env:CLUSTER_NODES="node-a:localhost:8741:9741,node-b:localhost:8742:9742,node-c:localhost:8743:9743"
+
+$env:NODE_ID="node-a"; bun run src/index.ts
+$env:NODE_ID="node-b"; bun run src/index.ts
+$env:NODE_ID="node-c"; bun run src/index.ts
+```
+
+Or on Linux/macOS:
+
+```bash
+export CLUSTER_NODES="node-a:localhost:8741:9741,node-b:localhost:8742:9742,node-c:localhost:8743:9743"
+
 NODE_ID=node-a bun run src/index.ts
 NODE_ID=node-b bun run src/index.ts
 NODE_ID=node-c bun run src/index.ts
 ```
 
-Or use the npm scripts (these use command line args instead):
+Alternatively, use a `.env` file and pass the node ID as a command line argument:
 
 ```bash
-bun run node-a
-bun run node-b
-bun run node-c
+bun run src/index.ts node-a
+bun run src/index.ts node-b
+bun run src/index.ts node-c
 ```
 
-### Start frontend only
+### Start frontend
 
 ```bash
 bun run frontend:dev
-```
-
-### Run the test client
-
-```bash
-bun run test-client
-```
-
-The test client will:
-
-1. Connect to Node A
-2. Set a user ID
-3. Create a new room
-4. Add a video to playlist
-5. Start playback
-6. Send a chat message
-7. Seek and pause
-
-## Project Structure
-
-```
-src/
-├── index.ts              # Main entry point
-├── test-client.ts        # Test client for verification
-├── types/                # TypeScript type definitions
-│   ├── index.ts
-│   ├── messages.ts       # Message types (Room & Raft)
-│   ├── room.ts           # Room state types
-│   └── node.ts           # Node configuration types
-├── consensus/            # Raft consensus implementation
-│   ├── index.ts
-│   └── raft.ts           # Simplified Raft algorithm
-├── room/                 # Room state management
-│   ├── index.ts
-│   └── room-state.ts     # Room state manager
-├── rpc/                  # Inter-node communication
-│   ├── index.ts
-│   └── rpc.ts            # RPC client & server
-├── node/                 # Backend node implementation
-│   ├── index.ts
-│   └── backend-node.ts   # Main backend node
-└── config/               # Configuration
-    ├── index.ts
-    └── cluster.ts        # Cluster configuration
 ```
 
 ## Client WebSocket API

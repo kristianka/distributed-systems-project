@@ -7,9 +7,11 @@ import { RoomState } from "../types";
 import { Chat } from "../components/Chat";
 import { Playlist } from "../components/Playlist";
 import { Participants } from "../components/Participants";
+import { Check, Clipboard } from "lucide-react";
 
 interface RoomPageProps {
     userId: string;
+    username: string;
     nodeUrl: string;
 }
 
@@ -38,7 +40,7 @@ function extractVideoId(input: string): string | null {
     return null;
 }
 
-export function RoomPage({ userId, nodeUrl }: RoomPageProps) {
+export function RoomPage({ userId, username, nodeUrl }: RoomPageProps) {
     const { roomCode } = useParams<{ roomCode: string }>();
     const navigate = useNavigate();
 
@@ -46,6 +48,7 @@ export function RoomPage({ userId, nodeUrl }: RoomPageProps) {
     const [error, setError] = useState<string | null>(null);
     const [newVideoUrl, setNewVideoUrl] = useState("");
     const [isSyncing, setIsSyncing] = useState(false);
+    const [copied, setCopied] = useState(false);
 
     const playerRef = useRef<YouTubePlayer | null>(null);
     const isRemoteUpdateRef = useRef(false);
@@ -133,6 +136,7 @@ export function RoomPage({ userId, nodeUrl }: RoomPageProps) {
     } = useWebSocket({
         url: nodeUrl,
         userId,
+        username,
         onRoomJoined: handleRoomJoined,
         onRoomStateUpdate: handleRoomStateUpdate,
         onError: handleError,
@@ -247,6 +251,8 @@ export function RoomPage({ userId, nodeUrl }: RoomPageProps) {
     const copyRoomCode = () => {
         if (roomCode) {
             navigator.clipboard.writeText(roomCode);
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
         }
     };
 
@@ -259,19 +265,24 @@ export function RoomPage({ userId, nodeUrl }: RoomPageProps) {
     }
 
     return (
-        <div className="flex flex-col h-full gap-4">
+        <div className="flex flex-col gap-4 min-h-full">
             {/* Header */}
             <div className="flex justify-between items-center px-4 py-3 bg-zinc-900 border border-zinc-800 rounded-lg">
                 <div>
                     <h2 className="text-xl font-semibold text-white">
                         Room:{" "}
-                        <span
-                            className="bg-blue-600 px-2 py-1 rounded cursor-pointer hover:bg-blue-700 transition-colors font-mono"
+                        <button
                             onClick={copyRoomCode}
-                            title="Click to copy"
+                            className="bg-violet-500 hover:bg-violet-600 px-2 py-1 rounded font-mono transition-colors inline-flex items-center gap-1.5"
+                            title={copied ? "Copied!" : "Click to copy"}
                         >
                             {roomCode}
-                        </span>
+                            {copied ? (
+                                <Check className="h-4 w-4 text-white/70" />
+                            ) : (
+                                <Clipboard className="h-4 w-4 text-white/70" />
+                            )}
+                        </button>
                     </h2>
                     <div className="flex items-center gap-4 mt-1">
                         {isConnected ? (
@@ -308,7 +319,7 @@ export function RoomPage({ userId, nodeUrl }: RoomPageProps) {
             )}
 
             {/* Main Content */}
-            <div className="grid grid-cols-1 lg:grid-cols-[1fr_350px] gap-4 flex-1 min-h-0">
+            <div className="grid grid-cols-1 lg:grid-cols-[1fr_350px] gap-4 lg:flex-1 lg:min-h-0">
                 {/* Video Section */}
                 <div className="flex flex-col gap-4">
                     <div className="flex-1 min-h-[400px] bg-black rounded-lg overflow-hidden relative">
@@ -347,23 +358,32 @@ export function RoomPage({ userId, nodeUrl }: RoomPageProps) {
                     <form onSubmit={handleAddVideo} className="flex gap-2">
                         <input
                             type="text"
-                            className="flex-1 bg-zinc-800 border border-zinc-700 focus:border-blue-500 text-white py-3 px-4 rounded-lg outline-none transition-colors placeholder:text-zinc-500"
+                            className="flex-1 bg-zinc-800 border border-zinc-700 focus:border-violet-500 text-white py-3 px-4 rounded-lg outline-none transition-colors placeholder:text-zinc-500"
                             placeholder="Paste YouTube URL or video ID..."
                             value={newVideoUrl}
                             onChange={(e) => setNewVideoUrl(e.target.value)}
                         />
                         <button
                             type="submit"
-                            className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium py-3 px-5 rounded-lg transition-colors whitespace-nowrap"
+                            className="bg-violet-500 hover:bg-violet-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium py-3 px-5 rounded-lg transition-colors whitespace-nowrap"
                             disabled={!newVideoUrl.trim()}
                         >
                             Add Video
                         </button>
                     </form>
+
+                    {/* Chat - Mobile only (shown under video) */}
+                    <div className="lg:hidden bg-zinc-900 border border-zinc-800 rounded-lg overflow-hidden min-h-[300px] flex flex-col">
+                        <Chat
+                            messages={roomState?.chatLog || []}
+                            currentUserId={userId}
+                            onSendMessage={handleSendMessage}
+                        />
+                    </div>
                 </div>
 
                 {/* Sidebar */}
-                <div className="flex flex-col gap-4 min-h-0 lg:max-h-full">
+                <div className="flex flex-col gap-4 lg:min-h-0 lg:max-h-full">
                     <div className="bg-zinc-900 border border-zinc-800 rounded-lg overflow-hidden max-h-52">
                         <Playlist
                             videos={roomState?.playlist || []}
@@ -380,7 +400,8 @@ export function RoomPage({ userId, nodeUrl }: RoomPageProps) {
                         />
                     </div>
 
-                    <div className="bg-zinc-900 border border-zinc-800 rounded-lg overflow-hidden flex-1 min-h-[250px] flex flex-col">
+                    {/* Chat - Desktop only (in sidebar) */}
+                    <div className="hidden lg:flex bg-zinc-900 border border-zinc-800 rounded-lg overflow-hidden flex-1 min-h-[250px] flex-col">
                         <Chat
                             messages={roomState?.chatLog || []}
                             currentUserId={userId}
