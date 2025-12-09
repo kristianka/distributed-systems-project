@@ -261,7 +261,7 @@ export function RoomPage({ userId, username, nodeUrl }: RoomPageProps) {
     }
 
     return (
-        <div className="flex flex-col h-full gap-4">
+        <div className="flex flex-col gap-4 min-h-full">
             {/* Header */}
             <div className="flex justify-between items-center px-4 py-3 bg-zinc-900 border border-zinc-800 rounded-lg">
                 <div>
@@ -310,7 +310,7 @@ export function RoomPage({ userId, username, nodeUrl }: RoomPageProps) {
             )}
 
             {/* Main Content */}
-            <div className="grid grid-cols-1 lg:grid-cols-[1fr_350px] gap-4 flex-1 min-h-0">
+            <div className="grid grid-cols-1 lg:grid-cols-[1fr_350px] gap-4 lg:flex-1 lg:min-h-0">
                 {/* Video Section */}
                 <div className="flex flex-col gap-4">
                     <div className="flex-1 min-h-[400px] bg-black rounded-lg overflow-hidden relative">
@@ -362,10 +362,19 @@ export function RoomPage({ userId, username, nodeUrl }: RoomPageProps) {
                             Add Video
                         </button>
                     </form>
+
+                    {/* Chat - Mobile only (shown under video) */}
+                    <div className="lg:hidden bg-zinc-900 border border-zinc-800 rounded-lg overflow-hidden min-h-[300px] flex flex-col">
+                        <Chat
+                            messages={roomState?.chatLog || []}
+                            currentUserId={userId}
+                            onSendMessage={handleSendMessage}
+                        />
+                    </div>
                 </div>
 
                 {/* Sidebar */}
-                <div className="flex flex-col gap-4 min-h-0 lg:max-h-full">
+                <div className="flex flex-col gap-4 lg:min-h-0 lg:max-h-full">
                     <div className="bg-zinc-900 border border-zinc-800 rounded-lg overflow-hidden max-h-52">
                         <Playlist
                             videos={roomState?.playlist || []}
@@ -382,7 +391,8 @@ export function RoomPage({ userId, username, nodeUrl }: RoomPageProps) {
                         />
                     </div>
 
-                    <div className="bg-zinc-900 border border-zinc-800 rounded-lg overflow-hidden flex-1 min-h-[250px] flex flex-col">
+                    {/* Chat - Desktop only (in sidebar) */}
+                    <div className="hidden lg:flex bg-zinc-900 border border-zinc-800 rounded-lg overflow-hidden flex-1 min-h-[250px] flex-col">
                         <Chat
                             messages={roomState?.chatLog || []}
                             currentUserId={userId}
