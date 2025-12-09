@@ -7,6 +7,7 @@ import { RoomState } from "../types";
 import { Chat } from "../components/Chat";
 import { Playlist } from "../components/Playlist";
 import { Participants } from "../components/Participants";
+import { Check, Clipboard } from "lucide-react";
 
 interface RoomPageProps {
     userId: string;
@@ -47,6 +48,7 @@ export function RoomPage({ userId, username, nodeUrl }: RoomPageProps) {
     const [error, setError] = useState<string | null>(null);
     const [newVideoUrl, setNewVideoUrl] = useState("");
     const [isSyncing, setIsSyncing] = useState(false);
+    const [copied, setCopied] = useState(false);
 
     const playerRef = useRef<YouTubePlayer | null>(null);
     const isRemoteUpdateRef = useRef(false);
@@ -249,6 +251,8 @@ export function RoomPage({ userId, username, nodeUrl }: RoomPageProps) {
     const copyRoomCode = () => {
         if (roomCode) {
             navigator.clipboard.writeText(roomCode);
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
         }
     };
 
@@ -267,13 +271,18 @@ export function RoomPage({ userId, username, nodeUrl }: RoomPageProps) {
                 <div>
                     <h2 className="text-xl font-semibold text-white">
                         Room:{" "}
-                        <span
-                            className="bg-violet-500 px-2 py-1 rounded cursor-pointer hover:bg-violet-600 transition-colors font-mono"
+                        <button
                             onClick={copyRoomCode}
-                            title="Click to copy"
+                            className="bg-violet-500 hover:bg-violet-600 px-2 py-1 rounded font-mono transition-colors inline-flex items-center gap-1.5"
+                            title={copied ? "Copied!" : "Click to copy"}
                         >
                             {roomCode}
-                        </span>
+                            {copied ? (
+                                <Check className="h-4 w-4 text-white/70" />
+                            ) : (
+                                <Clipboard className="h-4 w-4 text-white/70" />
+                            )}
+                        </button>
                     </h2>
                     <div className="flex items-center gap-4 mt-1">
                         {isConnected ? (
