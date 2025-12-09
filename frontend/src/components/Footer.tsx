@@ -2,7 +2,7 @@ import { ExternalLink } from "lucide-react";
 
 export const Footer = () => {
     return (
-        <footer className="mt-8 pt-6 border-t border-zinc-800 text-center">
+        <footer className="mt-16 sm:mt-4 pt-6 border-t border-zinc-800 text-center">
             <p className="text-zinc-500 text-sm">
                 <a
                     href="https://kristiankahkonen.com?utm_source=watch-together-footer"
