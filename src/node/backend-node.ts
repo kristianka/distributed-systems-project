@@ -300,7 +300,8 @@ export class BackendNode {
                     this.handleJoinRoom(
                         clientId,
                         message.payload.roomCode as string,
-                        message.payload.userId as string
+                        message.payload.userId as string,
+                        message.payload.username as string
                     );
                     break;
 
@@ -420,7 +421,12 @@ export class BackendNode {
     /**
      * Handle join room request
      */
-    private handleJoinRoom(clientId: string, roomCode: string, userId: string): void {
+    private handleJoinRoom(
+        clientId: string,
+        roomCode: string,
+        userId: string,
+        username: string
+    ): void {
         const client = this.clients.get(clientId);
         if (!client) {
             return;
@@ -445,7 +451,7 @@ export class BackendNode {
         if (raft?.isLeader()) {
             const operation: RoomOperation = {
                 type: RoomMessageType.ROOM_JOIN,
-                payload: { roomCode, userId },
+                payload: { roomCode, userId, username },
                 timestamp: Date.now()
             };
             raft.submitOperation(operation);
@@ -455,7 +461,7 @@ export class BackendNode {
             if (leaderId) {
                 const operation: RoomOperation = {
                     type: RoomMessageType.ROOM_JOIN,
-                    payload: { roomCode, userId },
+                    payload: { roomCode, userId, username },
                     timestamp: Date.now()
                 };
                 this.forwardToLeader(leaderId, operation).catch((error) => {
