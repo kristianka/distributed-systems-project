@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { useNodeStatus } from "../context";
+import { useNodeStatus, NodeStatusType } from "../context";
 import { getStatusIcon, getStatusText, getStatusClass } from "../utils/nodeStatus";
 
 export function NodeStatusTooltip() {
@@ -7,7 +7,11 @@ export function NodeStatusTooltip() {
     const tooltipRef = useRef<HTMLDivElement>(null);
     const closeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-    const { nodeStatuses, refreshStatuses } = useNodeStatus();
+    const { nodeStatuses, refreshStatuses, connectToNode, connectedNodeIndex } = useNodeStatus();
+
+    const canConnect = (status: NodeStatusType, index: number) => {
+        return status === "available" && index !== connectedNodeIndex;
+    };
 
     const handleMouseEnter = () => {
         if (closeTimeoutRef.current) {
@@ -94,13 +98,23 @@ export function NodeStatusTooltip() {
                                         {nodeStatus.node.name}
                                     </span>
                                 </div>
-                                <span
-                                    className={`text-xs px-2 py-0.5 rounded-full ${getStatusClass(
-                                        nodeStatus.status
-                                    )}`}
-                                >
-                                    {getStatusText(nodeStatus.status)}
-                                </span>
+                                <div className="flex items-center gap-2">
+                                    <span
+                                        className={`text-xs px-2 py-0.5 rounded-full ${getStatusClass(
+                                            nodeStatus.status
+                                        )}`}
+                                    >
+                                        {getStatusText(nodeStatus.status)}
+                                    </span>
+                                    {canConnect(nodeStatus.status, index) && (
+                                        <button
+                                            onClick={() => connectToNode(index)}
+                                            className="text-xs px-2 py-0.5 rounded bg-blue-600 hover:bg-blue-500 text-white transition-colors"
+                                        >
+                                            Connect
+                                        </button>
+                                    )}
+                                </div>
                             </li>
                         ))}
                     </ul>
