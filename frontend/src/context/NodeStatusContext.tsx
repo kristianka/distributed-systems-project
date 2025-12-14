@@ -28,6 +28,8 @@ interface NodeStatusContextValue {
     refreshStatuses: () => void;
     /** Call this when the WebSocket connection is lost to trigger automatic failover */
     onConnectionLost: () => void;
+    /** Manually connect to a specific node by index */
+    connectToNode: (nodeIndex: number) => void;
 }
 
 const NodeStatusContext = createContext<NodeStatusContextValue | null>(null);
@@ -306,6 +308,82 @@ export function NodeStatusProvider({ children }: NodeStatusProviderProps) {
         setRetryTrigger((t) => t + 1);
     }, [connectedNodeIndex]);
 
+    const connectToNode = useCallback(
+        (nodeIndex: number) => {
+            if (nodeIndex < 0 || nodeIndex >= nodes.length) {
+                console.error(`[NodeStatus] Invalid node index: ${nodeIndex}`);
+                return;
+            }
+
+            const node = nodes[nodeIndex];
+            const currentStatus = nodeStatuses[nodeIndex]?.status;
+
+            // Don't try to connect to unavailable nodes
+            if (currentStatus === "unavailable") {
+                console.log(`[NodeStatus] Cannot connect to unavailable node: ${node.name}`);
+                return;
+            }
+
+            // Already connected to this node
+            if (nodeIndex === connectedNodeIndex) {
+                console.log(`[NodeStatus] Already connected to ${node.name}`);
+                return;
+            }
+
+            console.log(`[NodeStatus] Manually connecting to ${node.name}...`);
+
+            // Mark current connected node as available (if any)
+            if (connectedNodeIndex !== null) {
+                setNodeStatuses((prev) =>
+                    prev.map((s, i) =>
+                        i === connectedNodeIndex ? { ...s, status: "available" } : s
+                    )
+                );
+            }
+
+            // Mark target node as connecting
+            setNodeStatuses((prev) =>
+                prev.map((s, i) => (i === nodeIndex ? { ...s, status: "connecting" } : s))
+            );
+
+            // Try to connect
+            const ws = new WebSocket(node.url);
+            const timeout = setTimeout(() => {
+                ws.close();
+                setNodeStatuses((prev) =>
+                    prev.map((s, i) => (i === nodeIndex ? { ...s, status: "unavailable" } : s))
+                );
+            }, 3000);
+
+            ws.onopen = () => {
+                clearTimeout(timeout);
+                ws.close();
+
+                // Update statuses
+                setNodeStatuses((prev) =>
+                    prev.map((s, i) => {
+                        if (i === nodeIndex) return { ...s, status: "connected" };
+                        if (i === connectedNodeIndex) return { ...s, status: "available" };
+                        return s;
+                    })
+                );
+
+                setConnectedNodeIndex(nodeIndex);
+                setStoredNodeIndex(nodeIndex);
+                console.log(`[NodeStatus] Successfully connected to ${node.name}`);
+            };
+
+            ws.onerror = () => {
+                clearTimeout(timeout);
+                setNodeStatuses((prev) =>
+                    prev.map((s, i) => (i === nodeIndex ? { ...s, status: "unavailable" } : s))
+                );
+                console.log(`[NodeStatus] Failed to connect to ${node.name}`);
+            };
+        },
+        [nodes, nodeStatuses, connectedNodeIndex]
+    );
+
     const refreshStatuses = useCallback(() => {
         const now = Date.now();
         if (now - lastCheckRef.current < 5000) {
@@ -357,7 +435,8 @@ export function NodeStatusProvider({ children }: NodeStatusProviderProps) {
         connectionFailed,
         retry,
         refreshStatuses,
-        onConnectionLost
+        onConnectionLost,
+        connectToNode
     };
 
     return <NodeStatusContext.Provider value={value}>{children}</NodeStatusContext.Provider>;
