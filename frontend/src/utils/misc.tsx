@@ -22,3 +22,17 @@ export const getUsername = () => {
 export const setUsername = (username: string) => {
     localStorage.setItem("username", username);
 };
+
+// Fetch YouTube video title using noembed.com (CORS-friendly)
+export const fetchYouTubeVideoTitle = async (videoId: string): Promise<string | null> => {
+    try {
+        const response = await fetch(
+            `https://noembed.com/embed?url=https://www.youtube.com/watch?v=${videoId}`
+        );
+        if (!response.ok) return null;
+        const data = await response.json();
+        return data.title || null;
+    } catch {
+        return null;
+    }
+};

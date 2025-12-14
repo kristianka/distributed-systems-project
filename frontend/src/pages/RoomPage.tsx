@@ -8,6 +8,7 @@ import { Chat } from "../components/Chat";
 import { Playlist } from "../components/Playlist";
 import { Participants } from "../components/Participants";
 import { Check, Clipboard } from "lucide-react";
+import { fetchYouTubeVideoTitle } from "../utils";
 
 interface RoomPageProps {
     userId: string;
@@ -211,7 +212,7 @@ export function RoomPage({ userId, username, nodeUrl }: RoomPageProps) {
         }
     };
 
-    const handleAddVideo = (e: React.FormEvent) => {
+    const handleAddVideo = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!roomCode || !newVideoUrl.trim()) return;
 
@@ -221,8 +222,10 @@ export function RoomPage({ userId, username, nodeUrl }: RoomPageProps) {
             return;
         }
 
-        console.log("[RoomPage] Adding video:", videoId);
-        addToPlaylist(roomCode, videoId);
+        // Fetch the video title from YouTube
+        const title = await fetchYouTubeVideoTitle(videoId);
+
+        addToPlaylist(roomCode, videoId, title || undefined);
         setNewVideoUrl("");
     };
 

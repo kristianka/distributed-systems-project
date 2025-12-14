@@ -151,7 +151,9 @@ export class RoomStateManager {
     private applyPlaylistAdd(payload: PlaylistAddPayload): void {
         const video = {
             videoId: payload.videoId,
+            title: payload.title,
             addedBy: payload.userId,
+            addedByUsername: payload.username,
             addedAt: Date.now()
         };
 

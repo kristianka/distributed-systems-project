@@ -32,7 +32,7 @@ interface UseWebSocketReturn {
     play: (roomCode: string, videoId: string, positionSeconds: number) => void;
     pause: (roomCode: string, positionSeconds: number) => void;
     seek: (roomCode: string, newPositionSeconds: number) => void;
-    addToPlaylist: (roomCode: string, videoId: string, position?: number) => void;
+    addToPlaylist: (roomCode: string, videoId: string, title?: string, position?: number) => void;
     removeFromPlaylist: (roomCode: string, videoId: string, position: number) => void;
     sendChatMessage: (roomCode: string, messageText: string) => void;
 }
@@ -275,15 +275,17 @@ export function useWebSocket(options: UseWebSocketOptions): UseWebSocketReturn {
     );
 
     const addToPlaylist = useCallback(
-        (roomCode: string, videoId: string, position?: number) => {
+        (roomCode: string, videoId: string, title?: string, position?: number) => {
             send(RoomMessageType.PLAYLIST_ADD, {
                 roomCode,
                 videoId,
+                title,
                 userId,
+                username,
                 newVideoPosition: position ?? -1 // -1 means append to end
             });
         },
-        [send, userId]
+        [send, userId, username]
     );
 
     const removeFromPlaylist = useCallback(
