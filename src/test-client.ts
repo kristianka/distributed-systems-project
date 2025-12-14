@@ -59,7 +59,13 @@ ws.onmessage = (event) => {
                 ws.send(
                     JSON.stringify({
                         type: "PLAYLIST_ADD",
-                        payload: { videoId: "dQw4w9WgXcQ", newVideoPosition: 0 }
+                        payload: {
+                            videoId: "dQw4w9WgXcQ",
+                            title: "Never Gonna Give You Up",
+                            userId: "test-user",
+                            username: "TestUser",
+                            newVideoPosition: 0
+                        }
                     })
                 );
             }, 1000);

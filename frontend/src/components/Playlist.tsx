@@ -1,5 +1,4 @@
 import { PlaylistVideo } from "../types";
-import { getDisplayName } from "../utils";
 
 interface PlaylistProps {
     videos: PlaylistVideo[];
@@ -62,7 +61,7 @@ export function Playlist({ videos, currentVideoId, onPlayVideo, onRemoveVideo }:
                                     {video.title || video.videoId}
                                 </span>
                                 <span className="text-xs text-zinc-500">
-                                    Added by {getDisplayName(video.addedBy)}
+                                    Added by {video.addedByUsername || "Unknown"}
                                 </span>
                             </div>
 

@@ -127,18 +127,18 @@ bun run frontend:dev
 
 ### Messages sent by client
 
-| Message Type      | Payload                                         | Description                |
-| ----------------- | ----------------------------------------------- | -------------------------- |
-| `SET_USER_ID`     | `{ userId: string }`                            | Set the user ID            |
-| `CREATE_ROOM`     | `{}`                                            | Create a new room          |
-| `JOIN_ROOM`       | `{ roomCode: string }`                          | Join an existing room      |
-| `LEAVE_ROOM`      | `{ roomCode: string }`                          | Leave the current room     |
-| `PLAYBACK_PLAY`   | `{ videoId: string, positionSeconds: number }`  | Start playback             |
-| `PLAYBACK_PAUSE`  | `{ positionSeconds: number }`                   | Pause playback             |
-| `PLAYBACK_SEEK`   | `{ newPositionSeconds: number }`                | Seek to position           |
-| `PLAYLIST_ADD`    | `{ videoId: string, newVideoPosition: number }` | Add video to playlist      |
-| `PLAYLIST_REMOVE` | `{ videoId: string }`                           | Remove video from playlist |
-| `CHAT_MESSAGE`    | `{ messageText: string }`                       | Send a chat message        |
+| Message Type      | Payload                                                                           | Description                |
+| ----------------- | --------------------------------------------------------------------------------- | -------------------------- |
+| `SET_USER_ID`     | `{ userId: string }`                                                              | Set the user ID            |
+| `CREATE_ROOM`     | `{}`                                                                              | Create a new room          |
+| `JOIN_ROOM`       | `{ roomCode: string }`                                                            | Join an existing room      |
+| `LEAVE_ROOM`      | `{ roomCode: string }`                                                            | Leave the current room     |
+| `PLAYBACK_PLAY`   | `{ videoId: string, positionSeconds: number }`                                    | Start playback             |
+| `PLAYBACK_PAUSE`  | `{ positionSeconds: number }`                                                     | Pause playback             |
+| `PLAYBACK_SEEK`   | `{ newPositionSeconds: number }`                                                  | Seek to position           |
+| `PLAYLIST_ADD`    | `{ videoId: string, title?: string, username: string, newVideoPosition: number }` | Add video to playlist      |
+| `PLAYLIST_REMOVE` | `{ videoId: string }`                                                             | Remove video from playlist |
+| `CHAT_MESSAGE`    | `{ messageText: string }`                                                         | Send a chat message        |
 
 ### Messages received by client
 
