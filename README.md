@@ -21,6 +21,40 @@ Each room has:
 -   Participants list
 -   Chat log
 
+## Project Structure
+
+```
+distributed-systems-project/
+├── frontend/                     # React frontend application
+│   ├── public/
+│   └── src/
+│       ├── components/           # UI components
+│       │   └── ui/               # shadcn/ui components
+│       ├── config/               # Frontend configuration
+│       ├── context/              # React contexts
+│       ├── hooks/                # Custom React hooks
+│       ├── lib/                  # Utility libraries
+│       ├── pages/                # Page components
+│       ├── types/                # TypeScript types
+│       └── utils/                # Utility functions
+│
+├── scripts/                      # Build/deployment scripts
+│
+├── shared/                       # Shared code between frontend/backend
+│   ├── components/
+│   └── types/
+│
+└── src/                          # Backend server application
+    ├── bench/                    # Benchmark suite
+    ├── config/                   # Cluster configuration
+    ├── consensus/                # Raft consensus implementation
+    ├── node/                     # Backend node server
+    ├── room/                     # Room state management
+    ├── rpc/                      # RPC communication layer
+    ├── types/                    # TypeScript types
+    └── utils/                    # Utility functions
+```
+
 ## Prerequisites
 
 -   [Bun](https://bun.sh/) runtime (v1.0+)
