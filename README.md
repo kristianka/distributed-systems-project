@@ -2,7 +2,20 @@
 
 University of Helsinki - Distributed Systems Course Project (Group 31)
 
-A distributed YouTube watch-together system where users join a room using a 6-digit code and watch synchronized videos with basic chat features.
+A distributed YouTube watch-together system where users join a room using a 6-digit code and watch synchronised videos with basic chat features. [Presentation (PDF)](https://helsinkifi-my.sharepoint.com/:b:/g/personal/kristkah_ad_helsinki_fi/IQCjyE_lBfbXSZCGWTHW_6HIAbgakKbUZMJpHHEQ07u9DG8?e=oh5bW1)
+
+![UI of two users watching the same video](/img/together.png)
+
+## Features
+
+-   🎬 **Synchronized Playback** - Play, pause, and seek videos in real-time across all participants
+-   💬 **Live Chat** - Built-in chat for room participants
+-   📋 **Shared Playlist** - Add and remove videos collaboratively
+-   🔗 **Easy Room Sharing** - Join rooms with a simple 6-digit code
+-   🗳️ **Raft Consensus** - Leader election and log replication for consistency
+-   🛡️ **Fault Tolerant** - Automatic recovery when nodes fail
+-   ⚡ **WebSocket Communication** - Low-latency real-time updates
+-   🔧 **Configurable Cluster** - Scale from 3 to N nodes via environment variables
 
 ## Architecture
 
@@ -20,6 +33,40 @@ Each room has:
 -   Play/pause state
 -   Participants list
 -   Chat log
+
+## Project Structure
+
+```
+distributed-systems-project/
+├── frontend/                     # React frontend application
+│   ├── public/
+│   └── src/
+│       ├── components/           # UI components
+│       │   └── ui/               # shadcn/ui components
+│       ├── config/               # Frontend configuration
+│       ├── context/              # React contexts
+│       ├── hooks/                # Custom React hooks
+│       ├── lib/                  # Utility libraries
+│       ├── pages/                # Page components
+│       ├── types/                # TypeScript types
+│       └── utils/                # Utility functions
+│
+├── scripts/                      # Build/deployment scripts
+│
+├── shared/                       # Shared code between frontend/backend
+│   ├── components/
+│   └── types/
+│
+└── src/                          # Backend server application
+    ├── bench/                    # Benchmark suite
+    ├── config/                   # Cluster configuration
+    ├── consensus/                # Raft consensus implementation
+    ├── node/                     # Backend node server
+    ├── room/                     # Room state management
+    ├── rpc/                      # RPC communication layer
+    ├── types/                    # TypeScript types
+    └── utils/                    # Utility functions
+```
 
 ## Prerequisites
 
@@ -129,7 +176,6 @@ bun run frontend:dev
 
 | Message Type      | Payload                                                                           | Description                |
 | ----------------- | --------------------------------------------------------------------------------- | -------------------------- |
-| `SET_USER_ID`     | `{ userId: string }`                                                              | Set the user ID            |
 | `CREATE_ROOM`     | `{}`                                                                              | Create a new room          |
 | `JOIN_ROOM`       | `{ roomCode: string }`                                                            | Join an existing room      |
 | `LEAVE_ROOM`      | `{ roomCode: string }`                                                            | Leave the current room     |
@@ -145,7 +191,6 @@ bun run frontend:dev
 | Message Type        | Payload                  | Description               |
 | ------------------- | ------------------------ | ------------------------- |
 | `CONNECTED`         | `{ clientId, nodeId }`   | Connection established    |
-| `USER_ID_SET`       | `{ userId }`             | User ID confirmed         |
 | `ROOM_CREATED`      | `{ roomCode, state }`    | Room created successfully |
 | `ROOM_JOINED`       | `{ roomCode, state }`    | Joined room successfully  |
 | `ROOM_LEFT`         | `{ roomCode }`           | Left room successfully    |
@@ -169,6 +214,40 @@ The system uses a simplified Raft-style consensus for:
 | `REQUEST_VOTE_RESP`   | Node → Candidate   | Vote granted/denied         |
 | `APPEND_ENTRIES`      | Leader → Followers | Heartbeat + log replication |
 | `APPEND_ENTRIES_RESP` | Follower → Leader  | Acknowledge entries         |
+
+## Benchmarks
+
+The project includes a comprehensive benchmark suite to measure system performance:
+
+```bash
+# Run all benchmarks
+bun run src/bench/benchmark.ts
+
+# Run specific tests
+bun run src/bench/benchmark.ts --test throughput
+bun run src/bench/benchmark.ts --test latency
+bun run src/bench/benchmark.ts --test scalability
+bun run src/bench/benchmark.ts --test fault
+```
+
+### Options
+
+| Option       | Description                                             | Default                |
+| ------------ | ------------------------------------------------------- | ---------------------- |
+| `--nodes`    | Comma-separated WebSocket URLs                          | Uses CLUSTER_NODES env |
+| `--test`     | Test type: all, throughput, latency, scalability, fault | all                    |
+| `--duration` | Duration of throughput test in seconds                  | 10                     |
+| `--clients`  | Number of concurrent clients for load test              | 10                     |
+| `--output`   | Output file for results                                 | benchmark-results.json |
+
+### Metrics Measured
+
+-   **Throughput** - Operations per second the system can handle
+-   **Latency** - Response time percentiles (p50, p95, p99) for different operations
+-   **Scalability** - Performance with increasing client load
+-   **Fault Tolerance** - Recovery time after node failure and leader re-election
+
+Results are saved to `benchmark-results.json` by default.
 
 ## License
 

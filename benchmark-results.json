@@ -1,0 +1,121 @@
+{
+  "timestamp": "2025-12-15T18:00:12.946Z",
+  "nodeCount": 5,
+  "nodes": [
+    "ws://100.100.41.37:8741/ws",
+    "ws://100.94.202.67:8742/ws",
+    "ws://100.109.70.49:8741/ws",
+    "ws://100.94.202.67:8744/ws",
+    "ws://100.94.202.67:8745/ws"
+  ],
+  "latency": [
+    {
+      "operation": "CHAT_MESSAGE",
+      "samples": 49,
+      "min": 39,
+      "max": 149,
+      "avg": 53.285714285714285,
+      "p50": 41,
+      "p95": 86,
+      "p99": 149
+    },
+    {
+      "operation": "PLAYLIST_ADD",
+      "samples": 50,
+      "min": 34,
+      "max": 148,
+      "avg": 54.34,
+      "p50": 43,
+      "p95": 73,
+      "p99": 148
+    },
+    {
+      "operation": "PLAYBACK_PLAY",
+      "samples": 50,
+      "min": 36,
+      "max": 72,
+      "avg": 48.02,
+      "p50": 41,
+      "p95": 71,
+      "p99": 72
+    },
+    {
+      "operation": "PLAYBACK_PAUSE",
+      "samples": 50,
+      "min": 40,
+      "max": 148,
+      "avg": 52.14,
+      "p50": 55,
+      "p95": 71,
+      "p99": 148
+    },
+    {
+      "operation": "PLAYBACK_SEEK",
+      "samples": 50,
+      "min": 39,
+      "max": 148,
+      "avg": 49.98,
+      "p50": 41,
+      "p95": 72,
+      "p99": 148
+    },
+    {
+      "operation": "CREATE_ROOM",
+      "samples": 10,
+      "min": 1,
+      "max": 14,
+      "avg": 6.5,
+      "p50": 5,
+      "p95": 14,
+      "p99": 14
+    }
+  ],
+  "throughput": [
+    {
+      "operation": "CHAT_MESSAGE",
+      "totalOperations": 3210,
+      "durationSeconds": 10.009,
+      "opsPerSecond": 320.7113597762014,
+      "successRate": 100
+    },
+    {
+      "operation": "PLAYBACK_OPERATIONS",
+      "totalOperations": 174,
+      "durationSeconds": 10.035,
+      "opsPerSecond": 17.33931240657698,
+      "successRate": 100
+    }
+  ],
+  "scalability": [
+    {
+      "clientCount": 1,
+      "throughput": 3.7743345252284466,
+      "avgLatency": 112.72222222222223,
+      "errorRate": 5.263157894736842
+    },
+    {
+      "clientCount": 5,
+      "throughput": 34.59181656453845,
+      "avgLatency": 13.938775510204081,
+      "errorRate": 0.5714285714285714
+    },
+    {
+      "clientCount": 10,
+      "throughput": 29.83293556085919,
+      "avgLatency": 15.937007874015748,
+      "errorRate": 0.6666666666666667
+    },
+    {
+      "clientCount": 20,
+      "throughput": 35.31489111241907,
+      "avgLatency": 28.948863636363637,
+      "errorRate": 0
+    },
+    {
+      "clientCount": 50,
+      "throughput": 50.51355447044957,
+      "avgLatency": 21.743589743589745,
+      "errorRate": 0
+    }
+  ]
+}
