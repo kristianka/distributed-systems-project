@@ -185,20 +185,20 @@ bun run src/bench/benchmark.ts --test fault
 
 ### Options
 
-| Option       | Description                                      | Default                    |
-| ------------ | ------------------------------------------------ | -------------------------- |
-| `--nodes`    | Comma-separated WebSocket URLs                   | Uses CLUSTER_NODES env     |
-| `--test`     | Test type: all, throughput, latency, scalability, fault | all               |
-| `--duration` | Duration of throughput test in seconds           | 10                         |
-| `--clients`  | Number of concurrent clients for load test       | 10                         |
-| `--output`   | Output file for results                          | benchmark-results.json     |
+| Option       | Description                                             | Default                |
+| ------------ | ------------------------------------------------------- | ---------------------- |
+| `--nodes`    | Comma-separated WebSocket URLs                          | Uses CLUSTER_NODES env |
+| `--test`     | Test type: all, throughput, latency, scalability, fault | all                    |
+| `--duration` | Duration of throughput test in seconds                  | 10                     |
+| `--clients`  | Number of concurrent clients for load test              | 10                     |
+| `--output`   | Output file for results                                 | benchmark-results.json |
 
 ### Metrics Measured
 
-- **Throughput** - Operations per second the system can handle
-- **Latency** - Response time percentiles (p50, p95, p99) for different operations
-- **Scalability** - Performance with increasing client load
-- **Fault Tolerance** - Recovery time after node failure and leader re-election
+-   **Throughput** - Operations per second the system can handle
+-   **Latency** - Response time percentiles (p50, p95, p99) for different operations
+-   **Scalability** - Performance with increasing client load
+-   **Fault Tolerance** - Recovery time after node failure and leader re-election
 
 Results are saved to `benchmark-results.json` by default.
 
