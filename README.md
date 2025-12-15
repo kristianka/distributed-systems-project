@@ -2,7 +2,20 @@
 
 University of Helsinki - Distributed Systems Course Project (Group 31)
 
-A distributed YouTube watch-together system where users join a room using a 6-digit code and watch synchronized videos with basic chat features.
+A distributed YouTube watch-together system where users join a room using a 6-digit code and watch synchronised videos with basic chat features. [Presentation (PDF)](https://helsinkifi-my.sharepoint.com/:b:/g/personal/kristkah_ad_helsinki_fi/IQCjyE_lBfbXSZCGWTHW_6HIAbgakKbUZMJpHHEQ07u9DG8?e=oh5bW1)
+
+![UI of two users watching the same video](/img/together.png)
+
+## Features
+
+-   🎬 **Synchronized Playback** - Play, pause, and seek videos in real-time across all participants
+-   💬 **Live Chat** - Built-in chat for room participants
+-   📋 **Shared Playlist** - Add and remove videos collaboratively
+-   🔗 **Easy Room Sharing** - Join rooms with a simple 6-digit code
+-   🗳️ **Raft Consensus** - Leader election and log replication for consistency
+-   🛡️ **Fault Tolerant** - Automatic recovery when nodes fail
+-   ⚡ **WebSocket Communication** - Low-latency real-time updates
+-   🔧 **Configurable Cluster** - Scale from 3 to N nodes via environment variables
 
 ## Architecture
 
