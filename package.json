@@ -6,6 +6,13 @@
   "private": true,
   "scripts": {
     "start": "bun run src/index.ts",
+    "test-client": "bun run src/test-client.ts",
+    "bench": "bun run src/bench/benchmark.ts",
+    "bench:latency": "bun run src/bench/benchmark.ts --test latency",
+    "bench:throughput": "bun run src/bench/benchmark.ts --test throughput",
+    "bench:scalability": "bun run src/bench/benchmark.ts --test scalability",
+    "bench:fault": "bun run src/bench/benchmark.ts --test fault",
+    "bench:compare": "bun run src/bench/scalability-comparison.ts",
     "frontend:install": "cd frontend && npm install",
     "frontend:dev": "cd frontend && npm run dev",
     "frontend:build": "cd frontend && npm run build"
